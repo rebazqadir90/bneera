@@ -180,6 +180,9 @@ p{margin:0;}
 }
 .lang-option:hover{background:color-mix(in srgb, var(--accent) 8%, transparent);}
 .lang-option.is-active{color:var(--accent);font-weight:600;}
+[dir="rtl"] .lang-switch-menu{right:auto;left:0;}
+[dir="rtl"] .lang-option{text-align:right;}
+[dir="rtl"] .btn-arrow{display:inline-block;transform:scaleX(-1);}
 .nav-toggle{display:none;background:none;border:1px solid var(--line-strong);border-radius:2px;width:38px;height:38px;cursor:pointer;color:var(--ink);}
 
 /* ---------- buttons ---------- */
@@ -826,14 +829,14 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
   <div class="container nav-row">
     <a href="#top" class="logo"><img class="logo-icon-img" src="BNEERA_logo_teal_final.png" alt="Bneera — We buy, we deliver."></a>
     <ul class="nav-links">
-      <li><a href="#top">Home</a></li>
-      <li><a href="#services">Services</a></li>
-      <li><a href="#process">How it works</a></li>
-      <li><a href="#about">About</a></li>
-      <li><a href="local-market.html">Local Market</a></li>
-      <li><a href="bids.html">Bids</a></li>
-      <li><a href="#contact">Contact</a></li>
-      <li><a href="#box-it" id="nav-box-it-link">Box it For Me</a></li>
+      <li><a href="#top" data-i18n="nav.home">Home</a></li>
+      <li><a href="#services" data-i18n="nav.services">Services</a></li>
+      <li><a href="#process" data-i18n="nav.how">How it works</a></li>
+      <li><a href="#about" data-i18n="nav.about">About</a></li>
+      <li><a href="local-market.html" data-i18n="nav.localMarket">Local Market</a></li>
+      <li><a href="bids.html" data-i18n="nav.bids">Bids</a></li>
+      <li><a href="#contact" data-i18n="nav.contact">Contact</a></li>
+      <li><a href="#box-it" id="nav-box-it-link" data-i18n="nav.boxIt">Box it For Me</a></li>
       <li class="lang-switch">
         <button type="button" class="lang-switch-btn" id="lang-switch-btn" aria-expanded="false" aria-haspopup="true">
           <svg class="lang-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
@@ -855,20 +858,20 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
     <div class="container">
       <div class="hero-grid">
         <div>
-          <p class="eyebrow">We ship. We deliver.</p>
-          <h1>Ship products.<br>Not <em>problems.</em></h1>
-          <p class="hero-sub">Bneera moves freight door to door — on-time pickups, real-time tracking, and last-mile delivery you can count on, without a single phone call.</p>
+          <p class="eyebrow" data-i18n="hero.eyebrow">We ship. We deliver.</p>
+          <h1 data-i18n="hero.title">Ship products.<br>Not <em>problems.</em></h1>
+          <p class="hero-sub" data-i18n="hero.sub">Bneera moves freight door to door — on-time pickups, real-time tracking, and last-mile delivery you can count on, without a single phone call.</p>
           <div class="hero-cta">
-            <a href="#process" class="btn btn-primary">See how it works <span class="btn-arrow">→</span></a>
-            <button type="button" class="btn btn-ghost" id="box-it-toggle-btn">Box it For Me</button>
+            <a href="#process" class="btn btn-primary" data-i18n="hero.cta1">See how it works <span class="btn-arrow">→</span></a>
+            <button type="button" class="btn btn-ghost" id="box-it-toggle-btn" data-i18n="nav.boxIt">Box it For Me</button>
           </div>
-          <p class="hero-fine mono">No long-term contracts · Integrates with Shopify, WooCommerce &amp; custom stores</p>
+          <p class="hero-fine mono" data-i18n="hero.fine">No long-term contracts · Integrates with Shopify, WooCommerce &amp; custom stores</p>
         </div>
 
         <div class="route-panel">
           <div class="route-panel-head">
-            <span>Route / SAMPLE-0417</span>
-            <span>Live</span>
+            <span data-i18n="hero.routeLabel">Route / SAMPLE-0417</span>
+            <span data-i18n="common.live">Live</span>
           </div>
           <svg class="route-svg world-svg" viewBox="500 120 1800 630" role="img" aria-label="World map highlighting Iraq as the import hub, with shipping lines from the USA, the UK, the EU, and China">
 
@@ -9249,28 +9252,28 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>
           </span>
           <div class="stat-num mono">+5,000</div>
-          <div class="stat-label">Orders shipped</div>
+          <div class="stat-label" data-i18n="stat.orders">Orders shipped</div>
         </div>
         <div class="stat">
           <span class="stat-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9"/></svg>
           </span>
           <div class="stat-num mono">+97%</div>
-          <div class="stat-label">Delivery rate</div>
+          <div class="stat-label" data-i18n="stat.delivery">Delivery rate</div>
         </div>
         <div class="stat">
           <span class="stat-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 7v5l3.5 2"/></svg>
           </span>
-          <div class="stat-num mono">On time</div>
-          <div class="stat-label">Lead time</div>
+          <div class="stat-num mono" data-i18n="stat.onTimeValue">On time</div>
+          <div class="stat-label" data-i18n="stat.leadTime">Lead time</div>
         </div>
         <div class="stat">
           <span class="stat-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M10 21v-6h4v6"/></svg>
           </span>
           <div class="stat-num mono">+300</div>
-          <div class="stat-label">Active clients</div>
+          <div class="stat-label" data-i18n="stat.activeClients">Active clients</div>
         </div>
       </div>
     </div>
@@ -9280,16 +9283,16 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
     <div class="container">
       <div class="section-head">
         <div>
-          <p class="eyebrow">Import network</p>
-          <h2>Every lane leads<br>through Iraq</h2>
+          <p class="eyebrow" data-i18n="network.eyebrow">Import network</p>
+          <h2 data-i18n="network.title">Every lane leads<br>through Iraq</h2>
         </div>
-        <p>Bneera is Iraq's entry point for cross-border ecommerce — inbound freight from major sourcing markets clears and consolidates through our Erbil hub before the last mile.</p>
+        <p data-i18n="network.sub">Bneera is Iraq's entry point for cross-border ecommerce — inbound freight from major sourcing markets clears and consolidates through our Erbil hub before the last mile.</p>
       </div>
 
       <div class="map-panel">
         <div class="route-panel-head">
-          <span>Trade lanes / Inbound</span>
-          <span>Live</span>
+          <span data-i18n="network.mapLabel">Trade lanes / Inbound</span>
+          <span data-i18n="common.live">Live</span>
         </div>
         <svg class="map-svg world-svg" viewBox="500 120 1800 630" role="img" aria-label="Map showing shipping lanes from the USA, Europe, Turkey, the UAE, and China converging on Erbil, Iraq">
 
@@ -17675,10 +17678,10 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
     <div class="container">
       <div class="section-head">
         <div>
-          <p class="eyebrow">Service</p>
-          <h2>Last-mile,<br>done right</h2>
+          <p class="eyebrow" data-i18n="services.eyebrow">Service</p>
+          <h2 data-i18n="services.title">Last-mile,<br>done right</h2>
         </div>
-        <p>The final few miles are where most delivery experiences break down. It's the one leg we obsess over.</p>
+        <p data-i18n="services.sub">The final few miles are where most delivery experiences break down. It's the one leg we obsess over.</p>
       </div>
 
       <div class="card-grid">
@@ -17687,39 +17690,39 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           </span>
           <span class="service-code">LM</span>
-          <h3>Last-mile delivery</h3>
-          <p>A carrier network built for the final few miles, where most delays actually happen — not just trunk-line shipping.</p>
+          <h3 data-i18n="services.card1.title">Last-mile delivery</h3>
+          <p data-i18n="services.card1.body">A carrier network built for the final few miles, where most delays actually happen — not just trunk-line shipping.</p>
         </div>
         <div class="service-card">
           <span class="service-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
           </span>
           <span class="service-code">INTL</span>
-          <h3>International shipping</h3>
-          <p>Door-to-door from our USA, Germany, China, Hong Kong &amp; UAE hubs — customs cleared and tracked the whole way to Iraq.</p>
+          <h3 data-i18n="services.card2.title">International shipping</h3>
+          <p data-i18n="services.card2.body">Door-to-door from our USA, Germany, China, Hong Kong &amp; UAE hubs — customs cleared and tracked the whole way to Iraq.</p>
         </div>
         <div class="service-card">
           <span class="service-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/></svg>
           </span>
           <span class="service-code">COD</span>
-          <h3>Cash on delivery</h3>
-          <p>Let buyers pay when the order lands. We collect on your behalf and settle payouts straight to your account.</p>
+          <h3 data-i18n="services.card3.title">Cash on delivery</h3>
+          <p data-i18n="services.card3.body">Let buyers pay when the order lands. We collect on your behalf and settle payouts straight to your account.</p>
         </div>
       </div>
 
-      <p class="eyebrow" style="margin-top:64px;">Shipment modes</p>
+      <p class="eyebrow" style="margin-top:64px;" data-i18n="services.modesEyebrow">Shipment modes</p>
       <div class="mode-grid">
         <div class="mode-card">
           <span class="mode-index mono">01</span>
           <span class="mode-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><line x1="12" y1="7" x2="12" y2="21"/><path d="M5 12H2a10 10 0 0 0 10 10 10 10 0 0 0 10-10h-3"/><line x1="8" y1="9" x2="16" y2="9"/></svg>
           </span>
-          <h3>Sea</h3>
-          <p>Full and part-container ocean freight for bulk, non-urgent shipments.</p>
+          <h3 data-i18n="services.modeSea.title">Sea</h3>
+          <p data-i18n="services.modeSea.body">Full and part-container ocean freight for bulk, non-urgent shipments.</p>
           <div class="mode-transit">
-            <span>Typical transit</span>
-            <span class="mode-transit-value">45–55 days</span>
+            <span data-i18n="common.typicalTransit">Typical transit</span>
+            <span class="mode-transit-value" data-i18n="services.modeSea.transit">45–55 days</span>
           </div>
         </div>
         <div class="mode-card">
@@ -17727,59 +17730,59 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
           <span class="mode-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="7" width="13" height="10"/><path d="M14 10h4l3 3v4h-7z"/><circle cx="6" cy="19" r="1.6"/><circle cx="17.5" cy="19" r="1.6"/></svg>
           </span>
-          <h3>Truck</h3>
-          <p>Cross-border overland trucking for regional pickups and deliveries.</p>
+          <h3 data-i18n="services.modeTruck.title">Truck</h3>
+          <p data-i18n="services.modeTruck.body">Cross-border overland trucking for regional pickups and deliveries.</p>
           <div class="mode-transit">
-            <span>Typical transit</span>
-            <span class="mode-transit-value">17–23 days</span>
+            <span data-i18n="common.typicalTransit">Typical transit</span>
+            <span class="mode-transit-value" data-i18n="services.modeTruck.transit">17–23 days</span>
           </div>
         </div>
         <div class="mode-card">
-          <span class="mode-badge">Fastest</span>
+          <span class="mode-badge" data-i18n="services.modeAir.badge">Fastest</span>
           <span class="mode-index mono">03</span>
           <span class="mode-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6.5L4 13v2l8-2.5V19l-2.5 1.8V22l2.5-.7 2.5.7v-1.2L14 19v-6.5l8 2.5v-2l-8-4.5V2z"/></svg>
           </span>
-          <h3>Air</h3>
-          <p>Express air freight for time-sensitive and high-value orders.</p>
+          <h3 data-i18n="services.modeAir.title">Air</h3>
+          <p data-i18n="services.modeAir.body">Express air freight for time-sensitive and high-value orders.</p>
           <div class="mode-transit">
-            <span>Typical transit</span>
-            <span class="mode-transit-value">15–20 days</span>
+            <span data-i18n="common.typicalTransit">Typical transit</span>
+            <span class="mode-transit-value" data-i18n="services.modeAir.transit">15–20 days</span>
           </div>
         </div>
       </div>
 
-      <p class="eyebrow" style="margin-top:64px;">Where we ship from</p>
+      <p class="eyebrow" style="margin-top:64px;" data-i18n="services.originEyebrow">Where we ship from</p>
       <div class="origin-grid">
         <div class="origin-card">
           <span class="origin-flag" aria-hidden="true"><svg viewBox="0 0 60 40"><rect width="60" height="40" fill="#B31942"/><g fill="#fff"><rect y="3.08" width="60" height="3.08"/><rect y="9.23" width="60" height="3.08"/><rect y="15.38" width="60" height="3.08"/><rect y="21.54" width="60" height="3.08"/><rect y="27.69" width="60" height="3.08"/><rect y="33.85" width="60" height="3.08"/></g><rect width="24" height="21.54" fill="#0A3161"/></svg></span>
-          <h3>USA</h3>
-          <p class="origin-tag mono">We Buy, We Ship</p>
+          <h3 data-i18n="services.origin.usa">USA</h3>
+          <p class="origin-tag mono" data-i18n="services.originTag">We Buy, We Ship</p>
         </div>
         <div class="origin-card">
           <span class="origin-flag" aria-hidden="true"><svg viewBox="0 0 60 40"><rect width="60" height="40" fill="#00247D"/><g stroke="#fff" stroke-width="8"><line x1="0" y1="0" x2="60" y2="40"/><line x1="60" y1="0" x2="0" y2="40"/></g><g stroke="#CF142B" stroke-width="3.2"><line x1="0" y1="0" x2="60" y2="40"/><line x1="60" y1="0" x2="0" y2="40"/></g><rect x="24" width="12" height="40" fill="#fff"/><rect y="14" width="60" height="12" fill="#fff"/><rect x="27" width="6" height="40" fill="#CF142B"/><rect y="17" width="60" height="6" fill="#CF142B"/></svg></span>
-          <h3>United Kingdom</h3>
-          <p class="origin-tag mono">We Buy, We Ship</p>
+          <h3 data-i18n="services.origin.uk">United Kingdom</h3>
+          <p class="origin-tag mono" data-i18n="services.originTag">We Buy, We Ship</p>
         </div>
         <div class="origin-card">
           <span class="origin-flag" aria-hidden="true"><svg viewBox="0 0 60 40"><rect width="60" height="13.33" y="0" fill="#000"/><rect width="60" height="13.33" y="13.33" fill="#DD0000"/><rect width="60" height="13.34" y="26.66" fill="#FFCE00"/></svg></span>
-          <h3>Germany</h3>
-          <p class="origin-tag mono">We Buy, We Ship</p>
+          <h3 data-i18n="services.origin.germany">Germany</h3>
+          <p class="origin-tag mono" data-i18n="services.originTag">We Buy, We Ship</p>
         </div>
         <div class="origin-card">
           <span class="origin-flag" aria-hidden="true"><svg viewBox="0 0 60 40"><rect width="60" height="40" fill="#DE2910"/><polygon points="10,6 12,12 18,12 13,16 15,22 10,18 5,22 7,16 2,12 8,12" fill="#FFDE00"/><polygon points="22,5 22.9,6.6 24.7,6.9 23.4,8.1 23.7,9.9 22,9 20.3,9.9 20.6,8.1 19.3,6.9 21.1,6.6" fill="#FFDE00"/><polygon points="26,10 26.9,11.6 28.7,11.9 27.4,13.1 27.7,14.9 26,14 24.3,14.9 24.6,13.1 23.3,11.9 25.1,11.6" fill="#FFDE00"/><polygon points="26,17 26.9,18.6 28.7,18.9 27.4,20.1 27.7,21.9 26,21 24.3,21.9 24.6,20.1 23.3,18.9 25.1,18.6" fill="#FFDE00"/><polygon points="22,22 22.9,23.6 24.7,23.9 23.4,25.1 23.7,26.9 22,26 20.3,26.9 20.6,25.1 19.3,23.9 21.1,23.6" fill="#FFDE00"/></svg></span>
-          <h3>China</h3>
-          <p class="origin-tag mono">We Buy, We Ship</p>
+          <h3 data-i18n="services.origin.china">China</h3>
+          <p class="origin-tag mono" data-i18n="services.originTag">We Buy, We Ship</p>
         </div>
         <div class="origin-card">
           <span class="origin-flag" aria-hidden="true"><svg viewBox="0 0 60 40"><rect width="60" height="40" fill="#DE2910"/><g fill="#fff" transform="translate(30,20)"><ellipse rx="4.2" ry="9.5"/><ellipse rx="4.2" ry="9.5" transform="rotate(72)"/><ellipse rx="4.2" ry="9.5" transform="rotate(144)"/><ellipse rx="4.2" ry="9.5" transform="rotate(216)"/><ellipse rx="4.2" ry="9.5" transform="rotate(288)"/></g></svg></span>
-          <h3>Hong Kong</h3>
-          <p class="origin-tag mono">We Buy, We Ship</p>
+          <h3 data-i18n="services.origin.hongkong">Hong Kong</h3>
+          <p class="origin-tag mono" data-i18n="services.originTag">We Buy, We Ship</p>
         </div>
         <div class="origin-card">
           <span class="origin-flag" aria-hidden="true"><svg viewBox="0 0 60 40"><rect width="60" height="40" fill="#fff"/><rect width="60" height="13.33" fill="#00732F"/><rect width="60" height="13.34" y="26.66" fill="#000"/><rect width="16" height="40" fill="#FF0000"/></svg></span>
-          <h3>UAE</h3>
-          <p class="origin-tag mono">We Buy, We Ship</p>
+          <h3 data-i18n="services.origin.uae">UAE</h3>
+          <p class="origin-tag mono" data-i18n="services.originTag">We Buy, We Ship</p>
         </div>
       </div>
     </div>
@@ -17789,10 +17792,10 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
     <div class="container">
       <div class="section-head">
         <div>
-          <p class="eyebrow">How it works</p>
-          <h2>From checkout<br>to doorstep</h2>
+          <p class="eyebrow" data-i18n="process.eyebrow">How it works</p>
+          <h2 data-i18n="process.title">From checkout<br>to doorstep</h2>
         </div>
-        <p>One route, four legs. Each order is trackable end to end, from the moment it's placed to the moment it's signed for.</p>
+        <p data-i18n="process.sub">One route, four legs. Each order is trackable end to end, from the moment it's placed to the moment it's signed for.</p>
       </div>
 
       <div class="process-line">
@@ -17802,27 +17805,27 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
         <div class="process-steps">
           <div class="process-step">
             <span class="process-dot"></span>
-            <span class="process-time">0 hr</span>
-            <h3>Order placed</h3>
-            <p>Synced from your store the instant checkout completes — no manual export.</p>
+            <span class="process-time" data-i18n="process.step1.time">0 hr</span>
+            <h3 data-i18n="process.step1.title">Order placed</h3>
+            <p data-i18n="process.step1.body">Synced from your store the instant checkout completes — no manual export.</p>
           </div>
           <div class="process-step">
             <span class="process-dot"></span>
-            <span class="process-time">≤ 2 hrs</span>
-            <h3>Picked &amp; packed</h3>
-            <p>Routed to the nearest hub, picked, and boxed by our fulfillment team.</p>
+            <span class="process-time" data-i18n="process.step2.time">≤ 2 hrs</span>
+            <h3 data-i18n="process.step2.title">Picked &amp; packed</h3>
+            <p data-i18n="process.step2.body">Routed to the nearest hub, picked, and boxed by our fulfillment team.</p>
           </div>
           <div class="process-step">
             <span class="process-dot"></span>
-            <span class="process-time">1–3 days</span>
-            <h3>In transit</h3>
-            <p>Handed to our last-mile network with live tracking for you and your buyer.</p>
+            <span class="process-time" data-i18n="process.step3.time">1–3 days</span>
+            <h3 data-i18n="process.step3.title">In transit</h3>
+            <p data-i18n="process.step3.body">Handed to our last-mile network with live tracking for you and your buyer.</p>
           </div>
           <div class="process-step">
             <span class="process-dot"></span>
-            <span class="process-time">On schedule</span>
-            <h3>Delivered</h3>
-            <p>Confirmed on arrival, with return labels pre-staged in case it's not a fit.</p>
+            <span class="process-time" data-i18n="process.step4.time">On schedule</span>
+            <h3 data-i18n="process.step4.title">Delivered</h3>
+            <p data-i18n="process.step4.body">Confirmed on arrival, with return labels pre-staged in case it's not a fit.</p>
           </div>
         </div>
       </div>
@@ -17833,33 +17836,33 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
     <div class="container">
       <div class="section-head" style="grid-template-columns:1fr;margin-bottom:32px;">
         <div>
-          <p class="eyebrow">About Bneera</p>
-          <h2>Your bridge to global shopping</h2>
+          <p class="eyebrow" data-i18n="about.eyebrow">About Bneera</p>
+          <h2 data-i18n="about.title">Your bridge to global shopping</h2>
         </div>
       </div>
-      <p style="max-width:70ch;font-size:17px;line-height:1.6;color:var(--ink-soft);">BNEERA is a global shopping and logistics platform that connects customers to international marketplaces through reliable package forwarding and door-to-door delivery services. With warehouse addresses in multiple countries, we make it easy to shop worldwide, consolidate packages, manage customs, and receive orders safely at your doorstep. Our mission is to simplify cross-border shopping with fast, secure, and technology-driven logistics solutions.</p>
+      <p style="max-width:70ch;font-size:17px;line-height:1.6;color:var(--ink-soft);" data-i18n="about.body">BNEERA is a global shopping and logistics platform that connects customers to international marketplaces through reliable package forwarding and door-to-door delivery services. With warehouse addresses in multiple countries, we make it easy to shop worldwide, consolidate packages, manage customs, and receive orders safely at your doorstep. Our mission is to simplify cross-border shopping with fast, secure, and technology-driven logistics solutions.</p>
     </div>
   </section>
 
   <section class="cta-band" id="contact">
     <div class="container cta-inner">
       <div>
-        <p class="eyebrow" style="color:var(--ink-faint)">Get started</p>
-        <h2>Start shipping smarter</h2>
-        <p>Tell us your average monthly order volume and we'll send a rate card within one business day.</p>
+        <p class="eyebrow" style="color:var(--ink-faint)" data-i18n="cta.eyebrow">Get started</p>
+        <h2 data-i18n="cta.title">Start shipping smarter</h2>
+        <p data-i18n="cta.sub">Tell us your average monthly order volume and we'll send a rate card within one business day.</p>
       </div>
       <div>
         <form class="cta-form" id="lead-form">
-          <input type="email" required placeholder="you@yourstore.com" aria-label="Work email">
-          <button type="submit">Submit</button>
+          <input type="email" required placeholder="you@yourstore.com" aria-label="Work email" data-i18n-placeholder="cta.emailPlaceholder">
+          <button type="submit" data-i18n="cta.submit">Submit</button>
         </form>
-        <p class="cta-success mono" id="lead-success">Thanks — check your inbox for next steps.</p>
-        <p class="cta-note">No spam. One email, then it's your call.</p>
+        <p class="cta-success mono" id="lead-success" data-i18n="cta.success">Thanks — check your inbox for next steps.</p>
+        <p class="cta-note" data-i18n="cta.note">No spam. One email, then it's your call.</p>
       </div>
     </div>
     <div class="container">
       <div class="contact-details mono">
-        <span>Italian Village House 642, Erbil-Iraq</span>
+        <span data-i18n="cta.address">Italian Village House 642, Erbil-Iraq</span>
         <span class="sep">|</span>
         <a href="tel:+9647767330030">+964 (776)-733-3030</a>
         <span class="sep">|</span>
@@ -18012,38 +18015,38 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
   <div class="container footer-top">
     <div class="footer-brand">
       <a href="#top" class="logo"><img class="logo-icon-img" src="BNEERA_logo_teal_final.png" alt="Bneera — We buy, we deliver."></a>
-      <p>Fulfillment and logistics infrastructure for online sellers — from first sale to nationwide scale.</p>
+      <p data-i18n="footer.tagline">Fulfillment and logistics infrastructure for online sellers — from first sale to nationwide scale.</p>
     </div>
     <div class="footer-col">
-      <h4>Product</h4>
+      <h4 data-i18n="footer.colProduct">Product</h4>
       <ul>
-        <li><a href="#services">Services</a></li>
-        <li><a href="#process">How it works</a></li>
-        <li><a href="local-market.html">Local Market</a></li>
-        <li><a href="#contact">Pricing</a></li>
-        <li><a href="#contact">Integrations</a></li>
+        <li><a href="#services" data-i18n="nav.services">Services</a></li>
+        <li><a href="#process" data-i18n="nav.how">How it works</a></li>
+        <li><a href="local-market.html" data-i18n="nav.localMarket">Local Market</a></li>
+        <li><a href="#contact" data-i18n="footer.pricing">Pricing</a></li>
+        <li><a href="#contact" data-i18n="footer.integrations">Integrations</a></li>
       </ul>
     </div>
     <div class="footer-col">
-      <h4>Company</h4>
+      <h4 data-i18n="footer.colCompany">Company</h4>
       <ul>
-        <li><a href="#about">About</a></li>
-        <li><a href="#contact">Careers</a></li>
-        <li><a href="#contact">Contact</a></li>
+        <li><a href="#about" data-i18n="nav.about">About</a></li>
+        <li><a href="#contact" data-i18n="footer.careers">Careers</a></li>
+        <li><a href="#contact" data-i18n="nav.contact">Contact</a></li>
       </ul>
     </div>
     <div class="footer-col">
-      <h4>Resources</h4>
+      <h4 data-i18n="footer.colResources">Resources</h4>
       <ul>
-        <li><a href="#contact">Help center</a></li>
-        <li><a href="#contact">API docs</a></li>
-        <li><a href="#contact">Shipping calculator</a></li>
+        <li><a href="#contact" data-i18n="footer.helpCenter">Help center</a></li>
+        <li><a href="#contact" data-i18n="footer.apiDocs">API docs</a></li>
+        <li><a href="#contact" data-i18n="footer.shippingCalc">Shipping calculator</a></li>
       </ul>
     </div>
   </div>
   <hr class="rule">
   <div class="container footer-bottom">
-    <span class="copyright">© 2026 Bneera. All rights reserved.</span>
+    <span class="copyright" data-i18n="footer.copyright">© 2026 Bneera. All rights reserved.</span>
     <div class="barcode" aria-hidden="true" id="barcode"></div>
   </div>
 </footer>
@@ -18296,7 +18299,132 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
   if(window.location.hash === '#box-it'){ setBoxItModalOpen(true); }
   boxItCloseBtn.addEventListener('click', function(){ setBoxItModalOpen(false); });
 
-  // language switcher (UI only — no translation wired up yet)
+  // language switcher
+  var I18N = {
+    ar: {
+      'nav.home':'الرئيسية','nav.services':'الخدمات','nav.how':'كيف تعمل','nav.about':'من نحن',
+      'nav.localMarket':'السوق المحلي','nav.bids':'المزايدات','nav.contact':'تواصل معنا','nav.boxIt':'غلّفها لي',
+      'hero.eyebrow':'نشحن. نوصل.','hero.title':'اشحن منتجاتك.<br>لا <em>مشاكل.</em>',
+      'hero.sub':'تنقل بنيرة الشحنات من الباب إلى الباب — استلام في الموعد، تتبع لحظي، وتوصيل للميل الأخير يمكنك الوثوق به، دون أي مكالمة هاتفية.',
+      'hero.cta1':'شاهد كيف تعمل <span class="btn-arrow">→</span>',
+      'hero.fine':'بدون عقود طويلة الأمد · متوافق مع Shopify وWooCommerce والمتاجر المخصصة',
+      'hero.routeLabel':'المسار / SAMPLE-0417','common.live':'مباشر',
+      'network.eyebrow':'شبكة الاستيراد','network.title':'كل خط شحن<br>يمر عبر العراق',
+      'network.sub':'بنيرة هي بوابة العراق للتجارة الإلكترونية العابرة للحدود — الشحنات الواردة من أهم أسواق التوريد تُخلَّص وتُجمَّع عبر مركزنا في أربيل قبل مرحلة التوصيل الأخيرة.',
+      'network.mapLabel':'خطوط التجارة / الواردة',
+      'stat.orders':'طلب تم شحنه','stat.delivery':'معدل التسليم','stat.onTimeValue':'في الموعد',
+      'stat.leadTime':'مدة التسليم','stat.activeClients':'عميل نشط',
+      'services.eyebrow':'الخدمة','services.title':'الميل الأخير،<br>بالطريقة الصحيحة',
+      'services.sub':'الأميال القليلة الأخيرة هي حيث تتعطل معظم تجارب التوصيل. إنها المرحلة الوحيدة التي نُتقنها بعناية فائقة.',
+      'services.card1.title':'توصيل الميل الأخير',
+      'services.card1.body':'شبكة نقل مبنية خصيصًا للأميال القليلة الأخيرة، حيث تحدث معظم التأخيرات فعليًا — وليس فقط في الشحن الرئيسي.',
+      'services.card2.title':'الشحن الدولي',
+      'services.card2.body':'توصيل من الباب إلى الباب من مراكزنا في الولايات المتحدة وألمانيا والصين وهونغ كونغ والإمارات — تخليص جمركي وتتبع كامل حتى العراق.',
+      'services.card3.title':'الدفع عند الاستلام',
+      'services.card3.body':'دع المشترين يدفعون عند وصول الطلب. نقوم بالتحصيل نيابة عنك ونحوّل المدفوعات مباشرة إلى حسابك.',
+      'services.modesEyebrow':'طرق الشحن',
+      'services.modeSea.title':'بحري','services.modeSea.body':'شحن بحري بحاويات كاملة أو جزئية للشحنات الكبيرة غير العاجلة.','services.modeSea.transit':'45–55 يومًا',
+      'services.modeTruck.title':'بري','services.modeTruck.body':'نقل بري عابر للحدود للاستلام والتوصيل الإقليمي.','services.modeTruck.transit':'17–23 يومًا',
+      'services.modeAir.badge':'الأسرع','services.modeAir.title':'جوي','services.modeAir.body':'شحن جوي سريع للطلبات الحساسة للوقت وعالية القيمة.','services.modeAir.transit':'15–20 يومًا',
+      'common.typicalTransit':'مدة الشحن المعتادة',
+      'services.originEyebrow':'من أين نشحن',
+      'services.origin.usa':'الولايات المتحدة','services.origin.uk':'المملكة المتحدة','services.origin.germany':'ألمانيا',
+      'services.origin.china':'الصين','services.origin.hongkong':'هونغ كونغ','services.origin.uae':'الإمارات',
+      'services.originTag':'نشتري، نشحن',
+      'process.eyebrow':'كيف تعمل','process.title':'من الدفع<br>إلى الباب',
+      'process.sub':'مسار واحد، أربع مراحل. كل طلب قابل للتتبع من لحظة تقديمه حتى لحظة استلامه.',
+      'process.step1.time':'0 ساعة','process.step1.title':'تم تقديم الطلب','process.step1.body':'يتم مزامنته من متجرك فور إتمام الدفع — دون أي تصدير يدوي.',
+      'process.step2.time':'≤ ساعتين','process.step2.title':'تم التجهيز والتغليف','process.step2.body':'يُوجَّه إلى أقرب مركز، ويُجهَّز ويُغلَّف من قبل فريق التنفيذ لدينا.',
+      'process.step3.time':'1–3 أيام','process.step3.title':'قيد الشحن','process.step3.body':'يُسلَّم إلى شبكة الميل الأخير مع تتبع مباشر لك وللمشتري.',
+      'process.step4.time':'حسب الموعد','process.step4.title':'تم التسليم','process.step4.body':'تأكيد عند الوصول، مع ملصقات إرجاع جاهزة مسبقًا في حال عدم الملاءمة.',
+      'about.eyebrow':'عن بنيرة','about.title':'جسرك إلى التسوق العالمي',
+      'about.body':'بنيرة هي منصة عالمية للتسوق والخدمات اللوجستية تربط العملاء بالأسواق العالمية من خلال إعادة شحن موثوقة وخدمات توصيل من الباب إلى الباب. من خلال عناوين مستودعات في عدة دول، نجعل التسوق العالمي سهلاً، ونجمع الطرود، وندير الجمارك، ونستلم طلباتك بأمان عند بابك. مهمتنا هي تبسيط التسوق العابر للحدود بحلول لوجستية سريعة وآمنة ومدفوعة بالتقنية.',
+      'cta.eyebrow':'ابدأ الآن','cta.title':'اشحن بذكاء أكبر',
+      'cta.sub':'أخبرنا بمتوسط عدد طلباتك الشهرية وسنرسل لك بطاقة أسعار خلال يوم عمل واحد.',
+      'cta.emailPlaceholder':'you@yourstore.com','cta.submit':'إرسال',
+      'cta.success':'شكرًا — تحقق من بريدك الإلكتروني للخطوات التالية.','cta.note':'بدون رسائل مزعجة. رسالة واحدة، والقرار لك.',
+      'cta.address':'بيت 642، الحي الإيطالي، أربيل - العراق',
+      'footer.tagline':'بنية تحتية للتنفيذ والخدمات اللوجستية للبائعين عبر الإنترنت — من أول عملية بيع إلى التوسع على مستوى البلاد.',
+      'footer.colProduct':'المنتج','footer.colCompany':'الشركة','footer.colResources':'الموارد',
+      'footer.pricing':'الأسعار','footer.integrations':'التكاملات','footer.careers':'الوظائف',
+      'footer.helpCenter':'مركز المساعدة','footer.apiDocs':'وثائق API','footer.shippingCalc':'حاسبة الشحن',
+      'footer.copyright':'© 2026 بنيرة. جميع الحقوق محفوظة.'
+    },
+    ku: {
+      'nav.home':'سەرەکی','nav.services':'خزمەتگوزاریەکان','nav.how':'چۆن کار دەکات','nav.about':'دەربارە',
+      'nav.localMarket':'بازاڕی ناوخۆیی','nav.bids':'مزایدەکان','nav.contact':'پەیوەندی','nav.boxIt':'بۆکسکردن بۆ من',
+      'hero.eyebrow':'ناردن. گەیاندن.','hero.title':'بەرهەمەکانت بنێرە.<br>نەک <em>کێشە.</em>',
+      'hero.sub':'بنیرە بار لە دەرگاوە بۆ دەرگا دەگوازێتەوە — وەرگرتنی لە کاتی خۆیدا، شوێنکەوتنی ڕاستەوخۆ، و گەیاندنی کۆتا میل کە دەتوانیت متمانەی پێبکەیت، بەبێ هیچ پەیوەندیەکی تەلەفۆنی.',
+      'hero.cta1':'ببینە چۆن کار دەکات <span class="btn-arrow">→</span>',
+      'hero.fine':'بێ گرێبەستی درێژخایەن · گونجاوە لەگەڵ Shopify و WooCommerce و فرۆشگە تایبەتەکان',
+      'hero.routeLabel':'ڕێگا / SAMPLE-0417','common.live':'ڕاستەوخۆ',
+      'network.eyebrow':'تۆڕی هاوردەکردن','network.title':'هەموو ڕێگایەک<br>بە عێراقدا تێدەپەڕێت',
+      'network.sub':'بنیرە دەروازەی عێراقە بۆ بازرگانی ئەلیکترۆنی نێودەوڵەتی — بارە هاوردەکراوەکان لە گەورەترین بازاڕەکانی سەرچاوە لە ناوەندی ئێمە لە هەولێر ئاسان و کۆدەکرێنەوە پێش قۆناغی کۆتایی گەیاندن.',
+      'network.mapLabel':'هێڵەکانی بازرگانی / هاوردە',
+      'stat.orders':'داواکاری گەیەنراو','stat.delivery':'ڕێژەی گەیاندن','stat.onTimeValue':'لە کاتی خۆیدا',
+      'stat.leadTime':'ماوەی گەیاندن','stat.activeClients':'کڕیاری چالاک',
+      'services.eyebrow':'خزمەتگوزاری','services.title':'کۆتا میل،<br>بە شێوەی ڕاست',
+      'services.sub':'چەند میلە کۆتاییەکان ئەو شوێنەیە کە زۆربەی ئەزموونەکانی گەیاندن تێکدەچن. ئەوە تاکە قۆناغێکە کە زۆر گرنگی پێدەدەین.',
+      'services.card1.title':'گەیاندنی کۆتا میل',
+      'services.card1.body':'تۆڕێکی گواستنەوە کە تایبەت دروستکراوە بۆ چەند میلە کۆتاییەکان، ئەو شوێنەی زۆربەی دواکەوتنەکان ڕوودەدەن — نەک تەنها لە گواستنەوەی سەرەکی.',
+      'services.card2.title':'گەیاندنی نێودەوڵەتی',
+      'services.card2.body':'گەیاندن لە دەرگاوە بۆ دەرگا لە ناوەندەکانمان لە ئەمریکا، ئەڵمانیا، چین، هۆنگ کۆنگ و ئیمارات — بەگژداچوونی گومرگی و شوێنکەوتنی تەواو تا عێراق.',
+      'services.card3.title':'پارەدان لە کاتی گەیاندن',
+      'services.card3.body':'با کڕیارەکان پارە بدەن کاتێک داواکاریەکە گەیشت. ئێمە پارەکە لە جیاتی تۆ کۆدەکەینەوە و ڕاستەوخۆ بۆ هەژمارەکەت دەینێرین.',
+      'services.modesEyebrow':'شێوازەکانی گەیاندن',
+      'services.modeSea.title':'دەریایی','services.modeSea.body':'گەیاندنی دەریایی بە کۆنتەینەری تەواو یان بەشی بۆ بارە گەورەکان کە پەلە نییە.','services.modeSea.transit':'45–55 ڕۆژ',
+      'services.modeTruck.title':'ڕێگای وشکانی','services.modeTruck.body':'گواستنەوەی وشکانی بەسەر سنووردا بۆ وەرگرتن و گەیاندنی ناوچەیی.','services.modeTruck.transit':'17–23 ڕۆژ',
+      'services.modeAir.badge':'خێراترین','services.modeAir.title':'ئاسمانی','services.modeAir.body':'گەیاندنی ئاسمانی خێرا بۆ داواکاریە کاتی و بەنرخەکان.','services.modeAir.transit':'15–20 ڕۆژ',
+      'common.typicalTransit':'ماوەی ئاسایی گەیاندن',
+      'services.originEyebrow':'لە کوێوە دەنێرین',
+      'services.origin.usa':'ئەمریکا','services.origin.uk':'بەریتانیای یەکگرتوو','services.origin.germany':'ئەڵمانیا',
+      'services.origin.china':'چین','services.origin.hongkong':'هۆنگ کۆنگ','services.origin.uae':'ئیمارات',
+      'services.originTag':'دەیکڕین، دەینێرین',
+      'process.eyebrow':'چۆن کار دەکات','process.title':'لە پارەدان<br>بۆ بەردەرگا',
+      'process.sub':'یەک ڕێگا، چوار قۆناغ. هەر داواکاریەک لە سەرەتاوە تا کۆتایی شوێنکەوتنی دەکرێت.',
+      'process.step1.time':'0 کاتژمێر','process.step1.title':'داواکاری تۆمارکرا','process.step1.body':'ڕاستەوخۆ لە فرۆشگاکەتەوە هاوکاتە لەگەڵ تەواوبوونی پارەدان — بێ هیچ هەناردەکردنی دەستی.',
+      'process.step2.time':'≤ 2 کاتژمێر','process.step2.title':'هەڵبژێردرا و بەستەبەندی کرا','process.step2.body':'دەنێردرێت بۆ نزیکترین ناوەند، هەڵدەبژێردرێت و لەلایەن تیمی جێبەجێکردنمانەوە بەستەبەندی دەکرێت.',
+      'process.step3.time':'1–3 ڕۆژ','process.step3.title':'لە ڕێگادایە','process.step3.body':'دەدرێتە دەست تۆڕی کۆتا میل لەگەڵ شوێنکەوتنی ڕاستەوخۆ بۆ تۆ و کڕیارەکەت.',
+      'process.step4.time':'لە کاتی خۆیدا','process.step4.title':'گەیشت','process.step4.body':'پشتڕاستکردنەوە لە کاتی گەیشتن، لەگەڵ لیبڵی گەڕاندنەوەی ئامادەکراو بۆ حاڵەتی نەگونجان.',
+      'about.eyebrow':'دەربارەی بنیرە','about.title':'پردی تۆ بۆ کڕین و فرۆشتنی جیهانی',
+      'about.body':'بنیرە پلاتفۆرمێکی جیهانی کڕین و فرۆشتن و لۆجستیکییە کە کڕیاران بە بازاڕە نێودەوڵەتیەکان دەبەستێتەوە لە ڕێگەی گەیاندنی بارە متمانەپێکراوەکانەوە و خزمەتگوزاری گەیاندن لە دەرگاوە بۆ دەرگا. بە هەبوونی ناونیشانی کۆگا لە چەندین وڵات، کڕین لە سەرانسەری جیهان ئاسان دەکەین، بارەکان کۆدەکەینەوە، گومرگ بەڕێوەدەبەین، و داواکاریەکانت بە سەلامەتی لە بەردەرگاتدا وەردەگرین. ئامانجمان ئاسانکردنی کڕین و فرۆشتنی بەسەر سنووردایە بە چارەسەری لۆجستی خێرا، سەلامەت و تەکنەلۆژیایی.',
+      'cta.eyebrow':'دەست پێبکە','cta.title':'بە زیرەکیتر بار بنێرە',
+      'cta.sub':'ڕێژەی مانگانەی داواکاریەکانت پێمان بڵێ و لە ماوەی یەک ڕۆژی کاردا کارتی نرخمان بۆ دەنێرین.',
+      'cta.emailPlaceholder':'you@yourstore.com','cta.submit':'ناردن',
+      'cta.success':'سوپاس — پۆستەکەت بپشکنە بۆ هەنگاوەکانی داهاتوو.','cta.note':'بێ سپام. تەنها یەک ئیمەیل، پاشان بڕیار بە تۆیە.',
+      'cta.address':'خانووی 642، گەڕەکی ئیتاڵی، هەولێر - عێراق',
+      'footer.tagline':'بنکەی ژێرخانی جێبەجێکردن و لۆجستیک بۆ فرۆشیارانی ئۆنلاین — لە یەکەم فرۆشتنەوە تا فراوانبوونی نەتەوەیی.',
+      'footer.colProduct':'بەرهەم','footer.colCompany':'کۆمپانیا','footer.colResources':'سەرچاوەکان',
+      'footer.pricing':'نرخەکان','footer.integrations':'یەکخستنەکان','footer.careers':'هەلی کار',
+      'footer.helpCenter':'ناوەندی یارمەتی','footer.apiDocs':'بەڵگەنامەی API','footer.shippingCalc':'ژمێرەری گەیاندن',
+      'footer.copyright':'© 2026 بنیرە. هەموو مافەکان پارێزراون.'
+    }
+  };
+
+  function applyLanguage(lang){
+    var dict = I18N[lang];
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var key = el.getAttribute('data-i18n');
+      if(!el.hasAttribute('data-i18n-src')){ el.setAttribute('data-i18n-src', el.innerHTML); }
+      el.innerHTML = (dict && dict[key]) ? dict[key] : el.getAttribute('data-i18n-src');
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el){
+      var key = el.getAttribute('data-i18n-placeholder');
+      if(!el.hasAttribute('data-i18n-ph-src')){ el.setAttribute('data-i18n-ph-src', el.getAttribute('placeholder') || ''); }
+      el.setAttribute('placeholder', (dict && dict[key]) ? dict[key] : el.getAttribute('data-i18n-ph-src'));
+    });
+    var rtl = (lang === 'ar' || lang === 'ku');
+    document.documentElement.setAttribute('lang', lang);
+    document.documentElement.setAttribute('dir', rtl ? 'rtl' : 'ltr');
+    if(langCurrent){ langCurrent.textContent = lang.toUpperCase(); }
+    if(langMenu){
+      langMenu.querySelectorAll('.lang-option').forEach(function(o){
+        o.classList.toggle('is-active', o.getAttribute('data-lang').toLowerCase() === lang);
+      });
+    }
+    try{ localStorage.setItem('bneera-lang', lang); }catch(e){}
+  }
+
   var langBtn = document.getElementById('lang-switch-btn');
   var langMenu = document.getElementById('lang-switch-menu');
   var langCurrent = document.getElementById('lang-switch-current');
@@ -18308,9 +18436,7 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
     });
     langMenu.querySelectorAll('.lang-option').forEach(function(opt){
       opt.addEventListener('click', function(){
-        langMenu.querySelectorAll('.lang-option').forEach(function(o){ o.classList.remove('is-active'); });
-        opt.classList.add('is-active');
-        langCurrent.textContent = opt.getAttribute('data-lang');
+        applyLanguage(opt.getAttribute('data-lang').toLowerCase());
         langMenu.classList.remove('open');
         langBtn.setAttribute('aria-expanded', 'false');
       });
@@ -18321,6 +18447,9 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
         langBtn.setAttribute('aria-expanded', 'false');
       }
     });
+    var savedLang = 'en';
+    try{ savedLang = localStorage.getItem('bneera-lang') || 'en'; }catch(e){}
+    if(savedLang !== 'en'){ applyLanguage(savedLang); }
   }
   boxItOverlay.addEventListener('click', function(){ setBoxItModalOpen(false); });
 
