@@ -65,7 +65,22 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
   display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;font-weight:600;
   margin-left:4px;
 }
+.nav-links{display:flex;align-items:center;gap:28px;list-style:none;margin:0;padding:0;}
+.nav-links a{text-decoration:none;font-size:14px;font-weight:500;color:var(--ink-soft);transition:color .15s ease;}
+.nav-links a:hover,.nav-links a.active{color:var(--ink);}
+@media (max-width:920px){
+  .nav-links{display:none;}
+}
 .lang-switch{position:relative;}
+.lang-switch-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:none;border:1px solid var(--line-strong);border-radius:20px;
+  padding:6px 12px;font-family:var(--font-mono);font-size:12px;font-weight:500;
+  color:var(--ink);cursor:pointer;width:auto;height:auto;
+  transition:border-color .15s ease, color .15s ease;
+}
+.lang-switch-btn:hover{border-color:var(--accent);color:var(--accent);background:none;}
+.lang-switch-btn svg{width:14px;height:14px;}
 .lang-switch-menu{
   display:none;flex-direction:column;gap:2px;position:absolute;top:calc(100% + 8px);right:0;
   background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);min-width:140px;padding:6px;z-index:50;
@@ -81,6 +96,32 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
 .breadcrumb a:hover{color:var(--accent);}
 .breadcrumb .sep{margin:0 6px;}
 .breadcrumb .current{color:var(--ink-soft);}
+
+/* marketplaces */
+.marketplaces-panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin:28px 0 22px;}
+.marketplaces-eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 14px;}
+.marketplace-group{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:14px 0;border-top:1px solid var(--line);}
+.marketplace-group:first-of-type{border-top:none;padding-top:0;}
+.marketplace-country{font-family:var(--font-body);font-size:13.5px;font-weight:700;color:var(--ink);width:86px;flex:none;line-height:1.3;}
+.marketplace-badges{display:flex;gap:10px;flex-wrap:wrap;}
+.marketplace-badge{
+  display:inline-flex;align-items:center;gap:9px;
+  font-family:var(--font-body);font-weight:600;font-size:13.5px;
+  background:var(--bg-alt);border:1px solid var(--line);border-radius:8px;
+  padding:8px 14px 8px 8px;color:var(--ink);text-decoration:none;
+  transition:border-color .15s ease, transform .15s ease;
+}
+.marketplace-badge:hover{border-color:var(--accent);transform:translateY(-2px);}
+.marketplace-icon{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:26px;height:26px;flex:none;border-radius:50%;
+  background:var(--ink);color:var(--bg);
+  font-family:var(--font-mono);font-size:10.5px;font-weight:700;letter-spacing:-.02em;
+}
+.marketplace-icon-img{
+  background:#fff;border-radius:6px;padding:4px;
+}
+.marketplace-icon-img img{width:100%;height:100%;object-fit:contain;}
 
 /* filter tabs */
 .filter-tabs{display:flex;flex-wrap:wrap;gap:8px;padding-bottom:22px;}
@@ -200,10 +241,19 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
 <div class="topbar">
   <div class="topbar-inner">
     <a href="index.html" aria-label="Bneera home"><img class="logo-img" src="BNEERA_logo_teal_final.png" alt="Bneera"></a>
+    <ul class="nav-links">
+      <li><a href="index.html#top">Home</a></li>
+      <li><a href="index.html#services">Services</a></li>
+      <li><a href="index.html#process">How it works</a></li>
+      <li><a href="index.html#about">About</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+      <li><a href="orders.html" class="active">Box it For Me</a></li>
+    </ul>
     <div class="topbar-actions">
       <div class="lang-switch">
-        <button type="button" class="icon-btn" id="lang-switch-btn" aria-label="Language" aria-expanded="false" aria-haspopup="true">
+        <button type="button" class="lang-switch-btn" id="lang-switch-btn" aria-label="Language" aria-expanded="false" aria-haspopup="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span>EN</span>
         </button>
         <div class="lang-switch-menu" id="lang-switch-menu">
           <button type="button" class="lang-option is-active" data-lang="EN">English</button>
@@ -223,6 +273,45 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
 </div>
 
 <main class="container">
+  <div class="marketplaces-panel">
+    <p class="marketplaces-eyebrow">Shop from these marketplaces</p>
+    <div class="marketplace-group">
+      <span class="marketplace-country">🇺🇸 USA</span>
+      <div class="marketplace-badges">
+        <a class="marketplace-badge" href="https://www.amazon.com" target="_blank" rel="noopener"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" alt=""></span>Amazon</a>
+        <a class="marketplace-badge" href="https://www.ebay.com" target="_blank" rel="noopener"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/1/1b/EBay_logo.svg" alt=""></span>eBay</a>
+        <a class="marketplace-badge" href="https://www.walmart.com" target="_blank" rel="noopener"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Walmart_logo_%282008%29.svg" alt=""></span>Walmart</a>
+        <a class="marketplace-badge" href="https://www.apple.com" target="_blank" rel="noopener"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt=""></span>Apple</a>
+        <a class="marketplace-badge" href="https://store.google.com" target="_blank" rel="noopener"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt=""></span>Google Store</a>
+        <a class="marketplace-badge" href="https://www.macys.com" target="_blank" rel="noopener"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a6/Macy%27s_logo.svg" alt=""></span>Macy's</a>
+        <a class="marketplace-badge" href="https://www.sephora.com" target="_blank" rel="noopener"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/2/21/Sephora_logo.svg" alt=""></span>Sephora</a>
+        <a class="marketplace-badge" href="https://www.dkny.com" target="_blank" rel="noopener"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/6/68/DKNY_logo.svg" alt=""></span>DKNY</a>
+        <a class="marketplace-badge" href="https://www.calvinklein.us" target="_blank" rel="noopener"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/0/06/Calvin_Klein_logo.svg" alt=""></span>Calvin Klein</a>
+        <a class="marketplace-badge" href="https://www.nike.com" target="_blank" rel="noopener"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg" alt=""></span>Nike</a>
+        <a class="marketplace-badge" href="https://usa.tommy.com" target="_blank" rel="noopener"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/9/9d/Tommy_Hilfiger_logo.svg" alt=""></span>Tommy Hilfiger</a>
+        <a class="marketplace-badge" href="https://www.ralphlauren.com" target="_blank" rel="noopener" aria-label="Ralph Lauren"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/7/72/Ralph_Lauren_logo.svg" alt="Ralph Lauren"></span></a>
+      </div>
+    </div>
+    <div class="marketplace-group">
+      <span class="marketplace-country">🇨🇳 China &amp; Hong Kong</span>
+      <div class="marketplace-badges">
+        <a class="marketplace-badge" href="https://www.aliexpress.com" target="_blank" rel="noopener"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/3/3b/Aliexpress_logo.svg" alt=""></span>AliExpress</a>
+        <a class="marketplace-badge" href="https://www.alibaba.com" target="_blank" rel="noopener"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Alibaba_en_logo.svg" alt=""></span>Alibaba</a>
+        <a class="marketplace-badge" href="https://www.taobao.com" target="_blank" rel="noopener"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/d/dc/Taobao_Logo.svg" alt=""></span>Taobao</a>
+        <a class="marketplace-badge" href="https://www.made-in-china.com" target="_blank" rel="noopener"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/6/64/Made-in-China.com_logo.png" alt=""></span>Made-in-China</a>
+      </div>
+    </div>
+    <div class="marketplace-group">
+      <span class="marketplace-country">🇩🇪 Germany</span>
+      <div class="marketplace-badges">
+        <a class="marketplace-badge" href="https://www.amazon.de" target="_blank" rel="noopener"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" alt=""></span>Amazon.de</a>
+        <a class="marketplace-badge" href="https://www.ebay.de" target="_blank" rel="noopener"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/1/1b/EBay_logo.svg" alt=""></span>eBay.de</a>
+        <a class="marketplace-badge" href="https://www.rossmann.de" target="_blank" rel="noopener"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/8/8e/Rossmann_Logo.svg" alt=""></span>Rossmann</a>
+        <a class="marketplace-badge" href="https://www.otto.de" target="_blank" rel="noopener"><span class="marketplace-icon marketplace-icon-img"><img src="https://upload.wikimedia.org/wikipedia/commons/a/ad/Otto_GmbH_logo.svg" alt=""></span>Otto</a>
+      </div>
+    </div>
+  </div>
+
   <div class="page-head">
     <h1>My Orders</h1>
     <nav class="breadcrumb"><a href="index.html">Home</a><span class="sep">/</span><span class="current">My Orders</span></nav>

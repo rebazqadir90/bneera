@@ -457,6 +457,32 @@ section{padding:96px 0;}
   .origin-grid{grid-template-columns:repeat(2,1fr);}
 }
 
+/* ---------- marketplace ticker ---------- */
+.marketplace-ticker{
+  margin-top:24px;overflow:hidden;position:relative;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+}
+.marketplace-ticker:first-of-type{margin-top:40px;}
+.marketplace-ticker-track{display:flex;align-items:center;gap:48px;width:max-content;animation:marketplaceTicker 27s linear infinite;}
+.marketplace-ticker-track.reverse{animation-direction:reverse;}
+.marketplace-ticker-item{display:flex;align-items:center;gap:10px;flex:none;}
+.marketplace-ticker-logo{height:42px;width:auto;display:block;object-fit:contain;}
+.marketplace-ticker-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:42px;height:42px;flex:none;border-radius:50%;
+  background:var(--ink);color:var(--bg);
+  font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:-.02em;
+}
+.marketplace-ticker-name{font-family:var(--font-body);font-weight:600;font-size:14px;color:var(--ink-soft);white-space:nowrap;}
+@keyframes marketplaceTicker{
+  from{transform:translateX(0);}
+  to{transform:translateX(-50%);}
+}
+@media (prefers-reduced-motion: reduce){
+  .marketplace-ticker-track{animation:none;}
+}
+
 /* ---------- shipment modes ---------- */
 .mode-grid{
   display:grid;grid-template-columns:repeat(3,1fr);gap:18px;
@@ -17820,6 +17846,13 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
           <p class="origin-tag mono" data-i18n="services.originTag">We Buy, We Ship</p>
         </div>
       </div>
+
+      <div class="marketplace-ticker" aria-hidden="true">
+        <div class="marketplace-ticker-track" id="marketplace-ticker-track-1"></div>
+      </div>
+      <div class="marketplace-ticker" aria-hidden="true">
+        <div class="marketplace-ticker-track reverse" id="marketplace-ticker-track-2"></div>
+      </div>
     </div>
   </section>
 
@@ -18159,6 +18192,43 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
 
 <script>
 (function(){
+  var MARKETPLACE_LOGOS = [
+    {name:'Amazon', img:'https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg', noLabel:true},
+    {name:'eBay', img:'https://upload.wikimedia.org/wikipedia/commons/1/1b/EBay_logo.svg', noLabel:true},
+    {name:'Walmart', img:'https://upload.wikimedia.org/wikipedia/commons/b/b1/Walmart_logo_%282008%29.svg', noLabel:true},
+    {name:'Apple', img:'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg', noLabel:true, size:58},
+    {name:'Google', img:'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg', noLabel:true, size:58},
+    {name:'Macy\'s', img:'https://upload.wikimedia.org/wikipedia/commons/a/a6/Macy%27s_logo.svg', noLabel:true},
+    {name:'Sephora', img:'https://upload.wikimedia.org/wikipedia/commons/2/21/Sephora_logo.svg', noLabel:true, size:30},
+    {name:'DKNY', img:'https://upload.wikimedia.org/wikipedia/commons/6/68/DKNY_logo.svg', noLabel:true, size:30},
+    {name:'Calvin Klein', img:'https://upload.wikimedia.org/wikipedia/commons/0/06/Calvin_Klein_logo.svg', noLabel:true},
+    {name:'Nike', img:'https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg', noLabel:true},
+    {name:'Tommy Hilfiger', img:'https://upload.wikimedia.org/wikipedia/commons/9/9d/Tommy_Hilfiger_logo.svg', noLabel:true},
+    {name:'Ralph Lauren', img:'https://upload.wikimedia.org/wikipedia/commons/7/72/Ralph_Lauren_logo.svg', noLabel:true, size:25},
+    {name:'AliExpress', img:'https://upload.wikimedia.org/wikipedia/commons/3/3b/Aliexpress_logo.svg', noLabel:true},
+    {name:'Alibaba', img:'https://upload.wikimedia.org/wikipedia/commons/4/41/Alibaba_en_logo.svg', noLabel:true, size:34},
+    {name:'Taobao', img:'https://upload.wikimedia.org/wikipedia/commons/d/dc/Taobao_Logo.svg', noLabel:true},
+    {name:'Made-in-China', img:'https://upload.wikimedia.org/wikipedia/commons/6/64/Made-in-China.com_logo.png', noLabel:true},
+    {name:'Rossmann', img:'https://upload.wikimedia.org/wikipedia/commons/8/8e/Rossmann_Logo.svg', noLabel:true, size:34},
+    {name:'Otto', img:'https://upload.wikimedia.org/wikipedia/commons/a/ad/Otto_GmbH_logo.svg', noLabel:true}
+  ];
+  function renderTicker(trackId, logos){
+    var track = document.getElementById(trackId);
+    if(!track){ return; }
+    var itemsHtml = logos.map(function(m){
+      var sizeStyle = m.size ? ' style="height:' + m.size + 'px;"' : '';
+      var mark = m.img
+        ? '<img class="marketplace-ticker-logo" src="' + m.img + '" alt="' + m.name + '"' + sizeStyle + '>'
+        : '<span class="marketplace-ticker-badge">' + m.badge + '</span>';
+      var label = m.noLabel ? '' : '<span class="marketplace-ticker-name">' + m.name + '</span>';
+      return '<span class="marketplace-ticker-item">' + mark + label + '</span>';
+    }).join('');
+    track.innerHTML = itemsHtml + itemsHtml;
+  }
+  var tickerMid = Math.ceil(MARKETPLACE_LOGOS.length / 2);
+  renderTicker('marketplace-ticker-track-1', MARKETPLACE_LOGOS.slice(0, tickerMid));
+  renderTicker('marketplace-ticker-track-2', MARKETPLACE_LOGOS.slice(tickerMid));
+
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var statEls = document.querySelectorAll('.stat-num');
   function animateCount(el){
