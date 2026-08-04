@@ -773,7 +773,56 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
 .order-dropzone span{font-size:13.5px;color:var(--ink-soft);}
 .order-dropzone-browse{color:var(--accent);text-decoration:underline;}
 .order-modal-foot{display:flex;justify-content:flex-end;gap:12px;margin-top:28px;}
-.orders-toolbar{display:flex;justify-content:flex-end;margin-bottom:18px;}
+.orders-toolbar{display:flex;justify-content:flex-end;gap:10px;margin-bottom:18px;}
+.boxit-promo{
+  background:linear-gradient(135deg, var(--accent-strong), var(--accent));
+  color:var(--accent-ink);border-radius:8px;padding:22px 24px;margin-bottom:24px;
+}
+.boxit-promo-top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.boxit-promo-title{font-size:19px;font-weight:500;}
+.boxit-promo-title strong{font-weight:800;}
+.boxit-promo-flag{
+  font-family:var(--font-mono);font-size:13px;font-weight:600;letter-spacing:.04em;
+  background:rgba(255,255,255,0.16);border-radius:20px;padding:6px 14px;
+}
+.boxit-promo-features{
+  display:flex;gap:22px;margin-top:20px;padding-top:18px;
+  border-top:1px solid rgba(255,255,255,0.22);flex-wrap:wrap;
+}
+.boxit-promo-feature{display:flex;align-items:center;gap:10px;}
+.boxit-promo-icon{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:34px;height:34px;flex:none;border-radius:50%;
+  background:rgba(255,255,255,0.16);
+}
+.boxit-promo-icon svg{width:18px;height:18px;}
+.boxit-promo-feature div{display:flex;flex-direction:column;line-height:1.35;}
+.boxit-promo-feature strong{font-size:13.5px;font-weight:700;}
+.boxit-promo-feature span{font-size:12px;opacity:.85;}
+.boxit-stats-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
+}
+.boxit-stat-tile{
+  background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;
+  display:flex;flex-direction:column;gap:4px;
+  transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.boxit-stat-tile:hover{
+  transform:translateY(-3px);border-color:var(--accent);
+  box-shadow:0 10px 22px -14px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+.boxit-stat-icon{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:36px;height:36px;border-radius:8px;margin-bottom:6px;
+  background:color-mix(in srgb, var(--accent) 14%, var(--card));
+  color:var(--accent-strong);
+}
+.boxit-stat-icon svg{width:18px;height:18px;}
+.boxit-stat-num{font-family:var(--font-mono);font-size:24px;font-weight:600;color:var(--ink);}
+.boxit-stat-label{font-size:12.5px;color:var(--ink-faint);}
+@media (max-width:640px){
+  .boxit-stats-grid{grid-template-columns:1fr 1fr;}
+}
 .orders-list{display:flex;flex-direction:column;gap:24px;max-height:56vh;overflow-y:auto;}
 .orders-day-group{display:flex;flex-direction:column;gap:10px;}
 .orders-day-heading{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 2px;padding-bottom:8px;border-bottom:1px dashed var(--line-strong);}
@@ -834,7 +883,7 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
       <li><a href="#process" data-i18n="nav.how">How it works</a></li>
       <li><a href="#about" data-i18n="nav.about">About</a></li>
       <li><a href="#contact" data-i18n="nav.contact">Contact</a></li>
-      <li><a href="#box-it" id="nav-box-it-link" data-i18n="nav.boxIt">Box it For Me</a></li>
+      <li><a href="orders.html" id="nav-box-it-link" data-i18n="nav.boxIt">Box it For Me</a></li>
       <li class="lang-switch">
         <button type="button" class="lang-switch-btn" id="lang-switch-btn" aria-expanded="false" aria-haspopup="true">
           <svg class="lang-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
@@ -861,16 +910,12 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
           <p class="hero-sub" data-i18n="hero.sub">Bneera moves freight door to door — on-time pickups, real-time tracking, and last-mile delivery you can count on, without a single phone call.</p>
           <div class="hero-cta">
             <a href="#process" class="btn btn-primary" data-i18n="hero.cta1">See how it works <span class="btn-arrow">→</span></a>
-            <button type="button" class="btn btn-ghost" id="box-it-toggle-btn" data-i18n="nav.boxIt">Box it For Me</button>
+            <a href="orders.html" class="btn btn-ghost" id="box-it-toggle-btn" data-i18n="nav.boxIt">Box it For Me</a>
           </div>
           <p class="hero-fine mono" data-i18n="hero.fine">No long-term contracts · Integrates with Shopify, WooCommerce &amp; custom stores</p>
         </div>
 
         <div class="route-panel">
-          <div class="route-panel-head">
-            <span data-i18n="hero.routeLabel">Route / SAMPLE-0417</span>
-            <span data-i18n="common.live">Live</span>
-          </div>
           <svg class="route-svg world-svg" viewBox="500 120 1800 630" role="img" aria-label="World map highlighting Iraq as the import hub, with shipping lines from the USA, the UK, the EU, and China">
 
   <defs
@@ -17674,14 +17719,6 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
 
   <section class="services" id="services">
     <div class="container">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow" data-i18n="services.eyebrow">Service</p>
-          <h2 data-i18n="services.title">Last-mile,<br>done right</h2>
-        </div>
-        <p data-i18n="services.sub">The final few miles are where most delivery experiences break down. It's the one leg we obsess over.</p>
-      </div>
-
       <div class="card-grid">
         <div class="service-card">
           <span class="service-icon" aria-hidden="true">
@@ -17875,10 +17912,86 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
       <button class="order-modal-close" id="box-it-close-btn" type="button" aria-label="Close">&times;</button>
     </div>
     <div class="orders-toolbar">
+      <a href="orders.html" class="btn btn-ghost btn-small" style="text-decoration:none;">View all orders ↗</a>
+      <button type="button" class="btn btn-ghost btn-small" id="box-it-dashboard-btn">Dashboard</button>
       <button type="button" class="btn btn-primary btn-small" id="box-it-create-btn">+ Create Order</button>
     </div>
     <div class="orders-list" id="box-it-orders-list"></div>
     <p class="orders-empty" id="box-it-orders-empty">No orders yet — create your first one.</p>
+  </div>
+
+  <div class="box-it-view" id="box-it-dashboard-view" style="display:none;">
+    <div class="order-modal-head">
+      <div class="order-modal-head-left">
+        <button class="order-modal-back" id="box-it-dashboard-back-btn" type="button" aria-label="Back">←</button>
+        <h3>Dashboard</h3>
+      </div>
+      <button class="order-modal-close" id="box-it-dashboard-close-btn" type="button" aria-label="Close">&times;</button>
+    </div>
+
+    <div class="boxit-promo">
+      <div class="boxit-promo-top">
+        <p class="boxit-promo-title"><strong>Tax-free</strong> shopping from the USA</p>
+        <span class="boxit-promo-flag">🇺🇸 USA</span>
+      </div>
+      <div class="boxit-promo-features">
+        <div class="boxit-promo-feature">
+          <span class="boxit-promo-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6.5L4 13v2l8-2.5V19l-2.5 1.8V22l2.5-.7 2.5.7v-1.2L14 19v-6.5l8 2.5v-2l-8-4.5V2z"/></svg></span>
+          <div><strong>Air shipping</strong><span>Fast &amp; reliable</span></div>
+        </div>
+        <div class="boxit-promo-feature">
+          <span class="boxit-promo-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></span>
+          <div><strong>Package consolidation</strong><span>Save more</span></div>
+        </div>
+        <div class="boxit-promo-feature">
+          <span class="boxit-promo-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="7" width="13" height="10"/><path d="M14 10h4l3 3v4h-7z"/><circle cx="6" cy="19" r="1.6"/><circle cx="17.5" cy="19" r="1.6"/></svg></span>
+          <div><strong>Door to door</strong><span>Safe delivery</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="boxit-stats-grid">
+      <div class="boxit-stat-tile">
+        <span class="boxit-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span>
+        <span class="boxit-stat-num" id="box-it-stat-active-count">0</span>
+        <span class="boxit-stat-label">Total Active Orders</span>
+      </div>
+      <div class="boxit-stat-tile">
+        <span class="boxit-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6.5L4 13v2l8-2.5V19l-2.5 1.8V22l2.5-.7 2.5.7v-1.2L14 19v-6.5l8 2.5v-2l-8-4.5V2z"/></svg></span>
+        <span class="boxit-stat-num" id="box-it-stat-transit-count">0</span>
+        <span class="boxit-stat-label">Total In Transit Orders</span>
+      </div>
+      <div class="boxit-stat-tile">
+        <span class="boxit-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M9 16l2 2 4-4"/></svg></span>
+        <span class="boxit-stat-num" id="box-it-stat-processed-count">0</span>
+        <span class="boxit-stat-label">Total Processed Orders</span>
+      </div>
+      <div class="boxit-stat-tile">
+        <span class="boxit-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+        <span class="boxit-stat-num" id="box-it-stat-arrived-count">0</span>
+        <span class="boxit-stat-label">Total Arrived Orders</span>
+      </div>
+      <div class="boxit-stat-tile">
+        <span class="boxit-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1.1-3 2.5 1.3 2.2 3 2.5 3 1.1 3 2.5-1.3 2.5-3 2.5-3-1.1-3-2.5"/></svg></span>
+        <span class="boxit-stat-num" id="box-it-stat-active-total">$0.00</span>
+        <span class="boxit-stat-label">Active Order Total Price</span>
+      </div>
+      <div class="boxit-stat-tile">
+        <span class="boxit-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1.1-3 2.5 1.3 2.2 3 2.5 3 1.1 3 2.5-1.3 2.5-3 2.5-3-1.1-3-2.5"/></svg></span>
+        <span class="boxit-stat-num" id="box-it-stat-transit-total">$0.00</span>
+        <span class="boxit-stat-label">In Transit Order Total Price</span>
+      </div>
+      <div class="boxit-stat-tile">
+        <span class="boxit-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1.1-3 2.5 1.3 2.2 3 2.5 3 1.1 3 2.5-1.3 2.5-3 2.5-3-1.1-3-2.5"/></svg></span>
+        <span class="boxit-stat-num" id="box-it-stat-processed-total">$0.00</span>
+        <span class="boxit-stat-label">Processed Order Total Price</span>
+      </div>
+      <div class="boxit-stat-tile">
+        <span class="boxit-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1.1-3 2.5 1.3 2.2 3 2.5 3 1.1 3 2.5-1.3 2.5-3 2.5-3-1.1-3-2.5"/></svg></span>
+        <span class="boxit-stat-num" id="box-it-stat-arrived-total">$0.00</span>
+        <span class="boxit-stat-label">Arrived Order Total Price</span>
+      </div>
+    </div>
   </div>
 
   <div class="box-it-view" id="box-it-form-view" style="display:none;">
@@ -18121,15 +18234,18 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
     try { localStorage.setItem(BOX_IT_ORDERS_KEY, JSON.stringify(orders)); } catch(e){}
   }
 
-  var boxItToggleBtn = document.getElementById('box-it-toggle-btn');
   var boxItOverlay = document.getElementById('box-it-overlay');
   var boxItModal = document.getElementById('box-it-modal');
   var boxItOrdersView = document.getElementById('box-it-orders-view');
   var boxItFormView = document.getElementById('box-it-form-view');
   var boxItDetailView = document.getElementById('box-it-detail-view');
+  var boxItDashboardView = document.getElementById('box-it-dashboard-view');
   var boxItOrdersList = document.getElementById('box-it-orders-list');
   var boxItOrdersEmpty = document.getElementById('box-it-orders-empty');
   var boxItCreateBtn = document.getElementById('box-it-create-btn');
+  var boxItDashboardBtn = document.getElementById('box-it-dashboard-btn');
+  var boxItDashboardCloseBtn = document.getElementById('box-it-dashboard-close-btn');
+  var boxItDashboardBackBtn = document.getElementById('box-it-dashboard-back-btn');
   var boxItCloseBtn = document.getElementById('box-it-close-btn');
   var boxItFormCloseBtn = document.getElementById('box-it-form-close-btn');
   var boxItCancelBtn = document.getElementById('box-it-cancel-btn');
@@ -18241,7 +18357,38 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
     boxItOrdersView.style.display = view === 'orders' ? 'block' : 'none';
     boxItFormView.style.display = view === 'form' ? 'block' : 'none';
     boxItDetailView.style.display = view === 'detail' ? 'block' : 'none';
+    boxItDashboardView.style.display = view === 'dashboard' ? 'block' : 'none';
     if(view === 'orders'){ renderBoxItOrders(); }
+    if(view === 'dashboard'){ renderBoxItDashboard(); }
+  }
+
+  function setBoxItStat(prefix, count, total){
+    document.getElementById('box-it-stat-' + prefix + '-count').textContent = count;
+    document.getElementById('box-it-stat-' + prefix + '-total').textContent = formatBoxItPrice(total);
+  }
+
+  function renderBoxItDashboard(){
+    var orders = loadBoxItOrders();
+    var groups = {
+      pending:{count:0,total:0},
+      boxed:{count:0,total:0},
+      shipped:{count:0,total:0},
+      delivered:{count:0,total:0}
+    };
+    orders.forEach(function(order){
+      var key = String(order.status || 'pending').toLowerCase();
+      if(!groups[key]){ return; }
+      var price = Number(order.price) || 0;
+      var tax = Number(order.tax) || 0;
+      var shipping = Number(order.shipping) || 0;
+      var qty = Number(order.quantity) || 1;
+      groups[key].count += 1;
+      groups[key].total += price * qty + tax + shipping;
+    });
+    setBoxItStat('active', groups.pending.count, groups.pending.total);
+    setBoxItStat('transit', groups.shipped.count, groups.shipped.total);
+    setBoxItStat('processed', groups.boxed.count, groups.boxed.total);
+    setBoxItStat('arrived', groups.delivered.count, groups.delivered.total);
   }
 
   function showBoxItOrderDetail(order){
@@ -18284,12 +18431,6 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
     boxItModal.setAttribute('aria-hidden', open ? 'false' : 'true');
     if(open){ showBoxItView('orders'); }
   }
-  boxItToggleBtn.addEventListener('click', function(){ setBoxItModalOpen(true); });
-  var navBoxItLink = document.getElementById('nav-box-it-link');
-  if(navBoxItLink){
-    navBoxItLink.addEventListener('click', function(e){ e.preventDefault(); setBoxItModalOpen(true); });
-  }
-  if(window.location.hash === '#box-it'){ setBoxItModalOpen(true); }
   boxItCloseBtn.addEventListener('click', function(){ setBoxItModalOpen(false); });
 
   // language switcher
@@ -18450,6 +18591,9 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
     showBoxItView('form');
     boxItLinkInput.focus();
   });
+  boxItDashboardBtn.addEventListener('click', function(){ showBoxItView('dashboard'); });
+  boxItDashboardCloseBtn.addEventListener('click', function(){ setBoxItModalOpen(false); });
+  boxItDashboardBackBtn.addEventListener('click', function(){ showBoxItView('orders'); });
   boxItFormCloseBtn.addEventListener('click', function(){ setBoxItModalOpen(false); });
   boxItCancelBtn.addEventListener('click', function(){ showBoxItView('orders'); });
   boxItDetailCloseBtn.addEventListener('click', function(){ setBoxItModalOpen(false); });
@@ -18503,6 +18647,7 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
     var newOrder = {
       id: generateBoxItOrderId(),
       status: 'Pending',
+      createdAt: now.getTime(),
       link: boxItLinkInput.value.trim(),
       quantity: parseInt(boxItQuantityInput.value, 10) || 1,
       size: boxItSizeInput.value.trim(),
