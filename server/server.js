@@ -60,7 +60,11 @@ if (isMain) {
   const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
   const app = createApp({
     isProduction: process.env.NODE_ENV === 'production',
-    adminEmails
+    adminEmails,
+    // On hosts with an ephemeral filesystem (e.g. Render's free tier), the database and
+    // uploaded images are wiped on every restart unless these point at a persistent disk mount.
+    dbPath: process.env.DB_PATH || undefined,
+    uploadDir: process.env.UPLOAD_DIR || undefined
   });
   app.listen(port, () => {
     console.log(`Bneera server listening on http://localhost:${port}`);
