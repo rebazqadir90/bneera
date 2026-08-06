@@ -18277,33 +18277,33 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
   var success = document.getElementById('lead-success');
   form.addEventListener('submit', function(e){
     e.preventDefault();
-    form.style.display = 'none';
-    success.style.display = 'block';
+    var emailInput = form.querySelector('input[type=email]');
+    fetch('/api/leads', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailInput ? emailInput.value : '' })
+    }).then(function(){
+      form.style.display = 'none';
+      success.style.display = 'block';
+    }).catch(function(){
+      form.style.display = 'none';
+      success.style.display = 'block';
+    });
   });
 
   // box it for me modal
-  var BOX_IT_ORDERS_KEY = 'bneeraBoxItOrders';
+  var currentUser = null;
   function escapeHtmlBoxIt(str){
     return String(str).replace(/[&<>"']/g, function(c){
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
     });
   }
   function loadBoxItOrders(){
-    try {
-      var raw = localStorage.getItem(BOX_IT_ORDERS_KEY);
-      var orders = raw ? JSON.parse(raw) : [];
-      var needsSave = false;
-      orders.forEach(function(order){
-        if(!order.id){ order.id = generateBoxItOrderId(); needsSave = true; }
-        if(!order.day){ order.day = order.date || 'Undated'; needsSave = true; }
-        if(!order.status){ order.status = 'Pending'; needsSave = true; }
-      });
-      if(needsSave){ saveBoxItOrders(orders); }
-      return orders;
-    } catch(e){ return []; }
-  }
-  function saveBoxItOrders(orders){
-    try { localStorage.setItem(BOX_IT_ORDERS_KEY, JSON.stringify(orders)); } catch(e){}
+    return fetch('/api/orders', { credentials: 'same-origin' })
+      .then(function(res){ return res.ok ? res.json() : { orders: [] }; })
+      .then(function(data){ return data.orders || []; })
+      .catch(function(){ return []; });
   }
 
   var boxItOverlay = document.getElementById('box-it-overlay');
@@ -18351,12 +18351,16 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
   var boxItDropzoneLabel = document.getElementById('box-it-dropzone-label');
   var boxItImageInput = document.getElementById('box-it-image-input');
 
+  // KEEP IN SYNC WITH orders.html's STATUS_CLASS map
+  var BOX_IT_STATUS_CLASS = {
+    'Pending': 'order-status--pending',
+    'Processed': 'order-status--boxed', 'Confirmed': 'order-status--boxed', 'Purchased': 'order-status--boxed',
+    'Received': 'order-status--shipped', 'Shipped To Iraq': 'order-status--shipped',
+    'Arrived': 'order-status--delivered', 'Delivered': 'order-status--delivered',
+    'Canceled': 'order-status--pending'
+  };
   function boxItStatusClass(status){
-    var key = String(status || 'Pending').toLowerCase();
-    if(key === 'boxed'){ return 'order-status--boxed'; }
-    if(key === 'shipped'){ return 'order-status--shipped'; }
-    if(key === 'delivered'){ return 'order-status--delivered'; }
-    return 'order-status--pending';
+    return BOX_IT_STATUS_CLASS[status] || 'order-status--pending';
   }
   function boxItStatusBadge(status){
     return '<span class="order-status ' + boxItStatusClass(status) + ' mono">' + escapeHtmlBoxIt(status || 'Pending') + '</span>';
@@ -18368,7 +18372,7 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
   }
 
   function renderBoxItOrders(){
-    var orders = loadBoxItOrders();
+    loadBoxItOrders().then(function(orders){
     boxItOrdersList.innerHTML = '';
     if(orders.length === 0){
       boxItOrdersEmpty.style.display = 'block';
@@ -18423,6 +18427,7 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
 
       boxItOrdersList.appendChild(groupEl);
     });
+    });
   }
 
   function showBoxItView(view){
@@ -18439,28 +18444,37 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
     document.getElementById('box-it-stat-' + prefix + '-total').textContent = formatBoxItPrice(total);
   }
 
+  // KEEP IN SYNC WITH orders.html's STATUSES taxonomy
+  var BOX_IT_DASHBOARD_BUCKET = {
+    'Pending': 'active',
+    'Processed': 'processed', 'Confirmed': 'processed', 'Purchased': 'processed',
+    'Received': 'transit', 'Shipped To Iraq': 'transit',
+    'Arrived': 'arrived', 'Delivered': 'arrived'
+    // 'Canceled' intentionally excluded from every bucket/total
+  };
   function renderBoxItDashboard(){
-    var orders = loadBoxItOrders();
+    loadBoxItOrders().then(function(orders){
     var groups = {
-      pending:{count:0,total:0},
-      boxed:{count:0,total:0},
-      shipped:{count:0,total:0},
-      delivered:{count:0,total:0}
+      active:{count:0,total:0},
+      processed:{count:0,total:0},
+      transit:{count:0,total:0},
+      arrived:{count:0,total:0}
     };
     orders.forEach(function(order){
-      var key = String(order.status || 'pending').toLowerCase();
-      if(!groups[key]){ return; }
+      var bucket = BOX_IT_DASHBOARD_BUCKET[order.status];
+      if(!bucket){ return; }
       var price = Number(order.price) || 0;
       var tax = Number(order.tax) || 0;
       var shipping = Number(order.shipping) || 0;
       var qty = Number(order.quantity) || 1;
-      groups[key].count += 1;
-      groups[key].total += price * qty + tax + shipping;
+      groups[bucket].count += 1;
+      groups[bucket].total += price * qty + tax + shipping;
     });
-    setBoxItStat('active', groups.pending.count, groups.pending.total);
-    setBoxItStat('transit', groups.shipped.count, groups.shipped.total);
-    setBoxItStat('processed', groups.boxed.count, groups.boxed.total);
-    setBoxItStat('arrived', groups.delivered.count, groups.delivered.total);
+    setBoxItStat('active', groups.active.count, groups.active.total);
+    setBoxItStat('transit', groups.transit.count, groups.transit.total);
+    setBoxItStat('processed', groups.processed.count, groups.processed.total);
+    setBoxItStat('arrived', groups.arrived.count, groups.arrived.total);
+    });
   }
 
   function showBoxItOrderDetail(order){
@@ -18509,7 +18523,7 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
   var I18N = {
     ar: {
       'nav.home':'الرئيسية','nav.services':'الخدمات','nav.how':'كيف تعمل','nav.about':'من نحن',
-      'nav.localMarket':'السوق المحلي','nav.bids':'المزايدات','nav.contact':'تواصل معنا','nav.boxIt':'غلّفها لي',
+      'nav.contact':'تواصل معنا','nav.boxIt':'غلّفها لي',
       'hero.eyebrow':'نشحن. نوصل.','hero.title':'اشحن منتجاتك.<br>لا <em>مشاكل.</em>',
       'hero.sub':'تنقل بنيرة الشحنات من الباب إلى الباب — استلام في الموعد، تتبع لحظي، وتوصيل للميل الأخير يمكنك الوثوق به، دون أي مكالمة هاتفية.',
       'hero.cta1':'شاهد كيف تعمل <span class="btn-arrow">→</span>',
@@ -18558,7 +18572,7 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
     },
     ku: {
       'nav.home':'سەرەکی','nav.services':'خزمەتگوزاریەکان','nav.how':'چۆن کار دەکات','nav.about':'دەربارە',
-      'nav.localMarket':'بازاڕی ناوخۆیی','nav.bids':'مزایدەکان','nav.contact':'پەیوەندی','nav.boxIt':'بۆکسکردن بۆ من',
+      'nav.contact':'پەیوەندی','nav.boxIt':'بۆکسکردن بۆ من',
       'hero.eyebrow':'ناردن. گەیاندن.','hero.title':'بەرهەمەکانت بنێرە.<br>نەک <em>کێشە.</em>',
       'hero.sub':'بنیرە بار لە دەرگاوە بۆ دەرگا دەگوازێتەوە — وەرگرتنی لە کاتی خۆیدا، شوێنکەوتنی ڕاستەوخۆ، و گەیاندنی کۆتا میل کە دەتوانیت متمانەی پێبکەیت، بەبێ هیچ پەیوەندیەکی تەلەفۆنی.',
       'hero.cta1':'ببینە چۆن کار دەکات <span class="btn-arrow">→</span>',
@@ -18705,59 +18719,42 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
     boxItDropzoneLabel.textContent = 'Drag & drop your files or Browse';
   }
 
-  function generateBoxItOrderId(){
-    return Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase();
-  }
-
   boxItForm.addEventListener('submit', function(e){
     e.preventDefault();
     if(!boxItLinkInput.value.trim()){
       boxItForm.reportValidity();
       return;
     }
-    var now = new Date();
-    var newOrder = {
-      id: generateBoxItOrderId(),
-      status: 'Pending',
-      createdAt: now.getTime(),
-      link: boxItLinkInput.value.trim(),
-      quantity: parseInt(boxItQuantityInput.value, 10) || 1,
-      size: boxItSizeInput.value.trim(),
-      color: boxItColorInput.value.trim(),
-      weight: 0,
-      price: 0,
-      tax: 0,
-      shipping: 0,
-      note: boxItNoteInput.value.trim(),
-      day: now.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}),
-      time: now.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'})
-    };
+    var formData = new FormData();
+    formData.append('link', boxItLinkInput.value.trim());
+    formData.append('quantity', parseInt(boxItQuantityInput.value, 10) || 1);
+    formData.append('size', boxItSizeInput.value.trim());
+    formData.append('color', boxItColorInput.value.trim());
+    formData.append('note', boxItNoteInput.value.trim());
+    var file = boxItImageInput.files && boxItImageInput.files[0];
+    if(file){ formData.append('image', file); }
 
-    function finishBoxItSubmit(){
-      var orders = loadBoxItOrders();
-      orders.push(newOrder);
-      saveBoxItOrders(orders);
+    boxItStatus.textContent = 'Sending...';
+    fetch('/api/orders', {
+      method: 'POST',
+      credentials: 'same-origin',
+      body: formData
+    }).then(function(res){
+      return res.json().then(function(data){ return { ok: res.ok, data: data }; });
+    }).then(function(result){
+      if(!result.ok){
+        boxItStatus.textContent = (result.data && result.data.error && result.data.error.message) || 'Something went wrong — try again.';
+        return;
+      }
       boxItStatus.textContent = 'Order sent — we\'ll box it for you.';
       setTimeout(function(){
         boxItStatus.textContent = '';
         resetBoxItForm();
         showBoxItView('orders');
       }, 900);
-    }
-
-    var file = boxItImageInput.files && boxItImageInput.files[0];
-    if(file){
-      var reader = new FileReader();
-      reader.onload = function(){
-        newOrder.image = reader.result;
-        newOrder.imageName = file.name;
-        finishBoxItSubmit();
-      };
-      reader.onerror = finishBoxItSubmit;
-      reader.readAsDataURL(file);
-    } else {
-      finishBoxItSubmit();
-    }
+    }).catch(function(){
+      boxItStatus.textContent = 'Network error — try again.';
+    });
   });
 
   var bc = document.getElementById('barcode');

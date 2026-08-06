@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sign Up — Bneera</title>
-<meta name="description" content="Create your Bneera seller account and start shipping with warehousing, fulfillment, and last-mile delivery built for online stores.">
+<title>Log In — Bneera</title>
+<meta name="description" content="Log in to your Bneera account to manage orders, warehousing, and last-mile delivery for your online store.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231F7A6C'/%3E%3Ccircle cx='9' cy='23' r='2.4' fill='%23F3F1EA'/%3E%3Ccircle cx='23' cy='23' r='2.4' fill='%23F3F1EA'/%3E%3Cpath d='M5 23V11h13l6 6v6' stroke='%23F3F1EA' stroke-width='2' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E"><style>
 
 /* ---------- fonts ---------- */
@@ -653,8 +653,6 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
       <li><a href="index.html#top">Home</a></li>
       <li><a href="index.html#services">Services</a></li>
       <li><a href="index.html#process">How it works</a></li>
-      <li><a href="local-market.html">Local Market</a></li>
-      <li><a href="bids.html">Bids</a></li>
       <li><a href="index.html#contact">Contact</a></li>
       <li><a href="index.html#box-it">Box it For Me</a></li>
       <li class="lang-switch">
@@ -678,45 +676,31 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
     <div class="container">
       <div class="auth-card">
         <div class="auth-head">
-          <p class="eyebrow">Create account</p>
-          <h1>Start shipping<br>with Bneera</h1>
+          <p class="eyebrow">Welcome back</p>
+          <h1>Log in to<br>Bneera</h1>
           <p>Set up your seller account in a couple of minutes — no long-term contract, no minimum volume.</p>
         </div>
 
-        <form class="auth-form" id="signup-form" novalidate>
-          <div class="auth-field">
-            <label for="full-name">Full name</label>
-            <input type="text" id="full-name" name="full-name" required autocomplete="name">
-          </div>
+        <form class="auth-form" id="login-form" novalidate>
           <div class="auth-field">
             <label for="work-email">Email</label>
             <input type="email" id="work-email" name="work-email" required autocomplete="email" placeholder="you@yourstore.com">
           </div>
-          <div class="auth-row">
-            <div class="auth-field">
-              <label for="password">Password</label>
-              <input type="password" id="password" name="password" required autocomplete="new-password" minlength="8" placeholder="At least 8 characters">
-            </div>
-            <div class="auth-field">
-              <label for="confirm-password">Confirm password</label>
-              <input type="password" id="confirm-password" name="confirm-password" required autocomplete="new-password" placeholder="Re-enter password">
-            </div>
+          <div class="auth-field">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Your password">
           </div>
-          <p class="auth-error mono" id="signup-error">Passwords don't match — check both fields.</p>
-          <label class="auth-check">
-            <input type="checkbox" id="agree" name="agree" required>
-            <span>I agree to Bneera's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</span>
-          </label>
-          <button type="submit" class="btn btn-primary auth-submit">Create account <span class="btn-arrow">→</span></button>
+          <p class="auth-error mono" id="login-error" style="display:none;"></p>
+          <button type="submit" class="btn btn-primary auth-submit">Log in <span class="btn-arrow">→</span></button>
         </form>
 
-        <div class="auth-success" id="signup-success">
-          <p class="eyebrow">You're in</p>
-          <h2>Account created</h2>
-          <p>Check your inbox to verify your email and finish setting up your first shipment.</p>
+        <div class="auth-success" id="login-success">
+          <p class="eyebrow">Welcome back</p>
+          <h2>Logged in</h2>
+          <p>Redirecting you to your orders...</p>
         </div>
 
-        <p class="auth-foot">Already shipping with Bneera? <a href="index.html#contact">Contact your account team</a></p>
+        <p class="auth-foot">Don't have an account? <a href="signup.html">Sign up</a></p>
       </div>
     </div>
   </section>
@@ -732,7 +716,6 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
       <ul>
         <li><a href="index.html#services">Services</a></li>
         <li><a href="index.html#process">How it works</a></li>
-        <li><a href="local-market.html">Local Market</a></li>
         <li><a href="signup.html">Sign up</a></li>
         <li><a href="index.html#contact">Pricing</a></li>
         <li><a href="index.html#contact">Integrations</a></li>
@@ -764,21 +747,46 @@ footer{background:var(--bg-alt);border-top:1px solid var(--line);}
 
 <script>
 (function(){
-  var form = document.getElementById('signup-form');
-  var success = document.getElementById('signup-success');
-  var error = document.getElementById('signup-error');
+  var form = document.getElementById('login-form');
+  var success = document.getElementById('login-success');
+  var error = document.getElementById('login-error');
+  var workEmail = document.getElementById('work-email');
   var password = document.getElementById('password');
-  var confirm = document.getElementById('confirm-password');
+  var submitBtn = form.querySelector('.auth-submit');
+
+  function showError(message){
+    error.textContent = message;
+    error.style.display = 'block';
+  }
+
   form.addEventListener('submit', function(e){
     e.preventDefault();
-    if(password.value !== confirm.value){
-      error.style.display = 'block';
-      confirm.focus();
-      return;
-    }
     error.style.display = 'none';
-    form.style.display = 'none';
-    success.style.display = 'block';
+    submitBtn.disabled = true;
+
+    fetch('/api/login', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: workEmail.value,
+        password: password.value
+      })
+    }).then(function(res){
+      return res.json().then(function(data){ return { ok: res.ok, data: data }; });
+    }).then(function(result){
+      if(!result.ok){
+        submitBtn.disabled = false;
+        showError((result.data && result.data.error && result.data.error.message) || 'Something went wrong — try again.');
+        return;
+      }
+      form.style.display = 'none';
+      success.style.display = 'block';
+      setTimeout(function(){ window.location.href = 'orders.html'; }, 900);
+    }).catch(function(){
+      submitBtn.disabled = false;
+      showError('Network error — check your connection and try again.');
+    });
   });
 
   var bc = document.getElementById('barcode');

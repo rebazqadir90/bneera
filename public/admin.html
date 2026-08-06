@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — Bneera</title>
+<meta name="description" content="Internal admin: registered accounts and order status management.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231F7A6C'/%3E%3Ccircle cx='9' cy='23' r='2.4' fill='%23F3F1EA'/%3E%3Ccircle cx='23' cy='23' r='2.4' fill='%23F3F1EA'/%3E%3Cpath d='M5 23V11h13l6 6v6' stroke='%23F3F1EA' stroke-width='2' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F1EA;
+  --bg-alt:#EAE6DA;
+  --card:#FBFAF6;
+  --ink:#1C1B17;
+  --ink-soft:#5B584C;
+  --ink-faint:#8A8574;
+  --accent:#1F7A6C;
+  --accent-strong:#145C51;
+  --accent-ink:#F3F1EA;
+  --logo-blue:#1D4ED8;
+  --tag:#B5701A;
+  --danger:#B3413A;
+  --line:#D8D2C2;
+  --line-strong:#C2BAA4;
+  --shadow: 0 1px 2px rgba(28,27,23,0.06), 0 8px 24px -12px rgba(28,27,23,0.18);
+  --font-display:'Big Shoulders Display', 'Arial Narrow', sans-serif;
+  --font-body:'Public Sans', -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:'IBM Plex Mono', ui-monospace, 'Consolas', monospace;
+}
+:root[data-theme="dark"]{
+  --bg:#12161A; --bg-alt:#181D22; --card:#161B20;
+  --ink:#EDEAE0; --ink-soft:#A6ACAE; --ink-faint:#6E7578;
+  --accent:#3AA894; --accent-strong:#5BC3AE; --accent-ink:#0B1210;
+  --tag:#E8A33D; --danger:#E0776B;
+  --line:#262D33; --line-strong:#333C43;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+img,svg{max-width:100%;display:block;}
+a{color:inherit;text-decoration:none;}
+h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:clamp(28px,4vw,40px);font-weight:900;}
+h2{font-family:var(--font-display);text-transform:uppercase;margin:0 0 16px;font-size:20px;font-weight:800;}
+.container{max-width:1180px;margin:0 auto;padding:0 28px;}
+.mono{font-family:var(--font-mono);}
+
+.topbar{border-bottom:1px solid var(--line);background:var(--card);}
+.topbar-inner{max-width:1180px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;}
+.logo-img{height:34px;width:auto;display:block;}
+.topbar-actions{display:flex;align-items:center;gap:8px;}
+.icon-btn{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;
+  width:38px;height:38px;border-radius:50%;border:1px solid transparent;
+  color:var(--ink-soft);cursor:pointer;background:none;
+  transition:background .15s ease,color .15s ease;
+}
+.icon-btn:hover{background:var(--bg-alt);color:var(--ink);}
+.icon-btn svg{width:19px;height:19px;}
+.nav-links{display:flex;align-items:center;gap:28px;list-style:none;margin:0;padding:0;}
+.nav-links a{text-decoration:none;font-size:14px;font-weight:500;color:var(--ink-soft);transition:color .15s ease;}
+.nav-links a:hover,.nav-links a.active{color:var(--ink);}
+@media (max-width:920px){ .nav-links{display:none;} }
+
+.page-head{padding:36px 0 22px;}
+.badge-admin{display:inline-block;margin-left:12px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink);background:var(--accent);padding:4px 10px;border-radius:20px;vertical-align:middle;}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:22px;margin-bottom:28px;}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;}
+.panel-count{font-family:var(--font-mono);font-size:13px;color:var(--ink-faint);}
+
+.admin-toolbar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+.search-box{flex:1;min-width:200px;display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:8px;padding:9px 14px;background:var(--bg);}
+.search-box svg{width:16px;height:16px;color:var(--ink-faint);flex:none;}
+.search-box input{border:none;background:none;outline:none;color:var(--ink);font-family:var(--font-body);font-size:14px;width:100%;}
+.admin-toolbar select{
+  border:1px solid var(--line);border-radius:8px;padding:9px 12px;background:var(--bg);color:var(--ink);
+  font-family:var(--font-body);font-size:14px;cursor:pointer;
+}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th{text-align:left;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);padding:8px 10px;border-bottom:1px solid var(--line);}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+.role-admin{color:var(--accent);font-weight:700;}
+.link-cell{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle;}
+.status-select{
+  border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:var(--bg);color:var(--ink);
+  font-family:var(--font-body);font-size:13px;cursor:pointer;
+}
+.status-select:disabled{opacity:.6;cursor:wait;}
+.num-input{
+  width:72px;border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:var(--bg);color:var(--ink);
+  font-family:var(--font-mono);font-size:13px;
+}
+.num-input:disabled{opacity:.6;cursor:wait;}
+.num-input.saved{border-color:var(--accent);}
+.empty-state{padding:40px 0;text-align:center;color:var(--ink-faint);font-size:14px;}
+.table-scroll{overflow-x:auto;}
+.total-cell{font-weight:700;}
+.access-denied{padding:80px 0;text-align:center;}
+.access-denied p{color:var(--ink-soft);margin-top:10px;}
+img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:var(--bg-alt);}
+.status-pill{
+  display:inline-block;font-family:var(--font-mono);font-size:11px;font-weight:600;
+  padding:4px 10px;border-radius:20px;background:var(--bg-alt);color:var(--ink-soft);letter-spacing:.02em;
+}
+.btn-view{
+  background:var(--accent);color:var(--accent-ink);border:none;border-radius:6px;
+  padding:8px 14px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;
+}
+.btn-view:hover{background:var(--accent-strong);}
+
+/* order detail/edit modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(20,18,14,0.45);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:59;}
+.modal-overlay.open{opacity:1;pointer-events:auto;}
+.order-modal{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-48%);
+  width:520px;max-width:94vw;max-height:88vh;overflow-y:auto;
+  background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);
+  z-index:60;padding:26px;opacity:0;pointer-events:none;transition:opacity .2s ease, transform .2s ease;
+}
+.order-modal.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%);}
+.order-modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.order-modal-head h3{font-family:var(--font-body);font-size:18px;font-weight:700;margin:0;}
+.order-modal-close{
+  width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:none;color:var(--ink-soft);
+  font-size:18px;line-height:1;cursor:pointer;
+}
+.order-modal-close:hover{background:var(--bg-alt);}
+.detail-image{width:100%;border-radius:8px;margin-bottom:14px;max-height:200px;object-fit:cover;}
+.order-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.order-field label{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);}
+.order-field input,.order-field select{
+  font-family:var(--font-body);font-size:14px;color:var(--ink);background:var(--bg);
+  border:1px solid var(--line);border-radius:8px;padding:10px 12px;outline:none;
+}
+.order-field input:focus,.order-field select:focus{border-color:var(--accent);}
+.order-row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.order-link-row{font-size:13.5px;margin-bottom:14px;word-break:break-all;}
+.order-link-row a{color:var(--accent);}
+.modal-total-row{display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid var(--line);margin-top:4px;font-size:15px;font-weight:700;}
+.modal-save-btn{
+  width:100%;margin-top:6px;background:var(--accent);color:var(--accent-ink);border:none;border-radius:8px;
+  padding:12px;font-family:var(--font-body);font-weight:600;font-size:14.5px;cursor:pointer;
+}
+.modal-save-btn:hover{background:var(--accent-strong);}
+.modal-save-btn:disabled{opacity:.6;cursor:wait;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" aria-label="Bneera home"><img class="logo-img" src="BNEERA_logo_teal_final.png" alt="Bneera"></a>
+    <ul class="nav-links">
+      <li><a href="index.html#top">Home</a></li>
+      <li><a href="orders.html">My Orders</a></li>
+      <li><a href="admin.html" class="active">Admin</a></li>
+    </ul>
+    <div class="topbar-actions">
+      <button type="button" class="icon-btn" id="theme-toggle-btn" aria-label="Toggle theme" title="Toggle theme">
+        <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+      <button type="button" class="icon-btn" id="logout-btn" aria-label="Log out" title="Log out">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<main class="container">
+  <div class="page-head">
+    <h1>Admin<span class="badge-admin">Internal</span></h1>
+  </div>
+
+  <div id="admin-content" style="display:none;">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Registered Accounts</h2>
+        <span class="panel-count mono" id="users-count">0 accounts</span>
+      </div>
+      <div class="admin-toolbar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="users-search" placeholder="Search by name or email">
+        </div>
+        <select id="users-role-filter">
+          <option value="all">All roles</option>
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <table>
+        <thead><tr><th>Email</th><th>Full name</th><th>Role</th><th>Joined</th></tr></thead>
+        <tbody id="users-body"></tbody>
+      </table>
+      <p class="empty-state" id="users-empty" hidden>No accounts match.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>All Orders</h2>
+        <span class="panel-count mono" id="orders-count">0 orders</span>
+      </div>
+      <div class="admin-toolbar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="orders-search" placeholder="Search order #, owner, or link">
+        </div>
+        <select id="orders-status-filter">
+          <option value="all">All statuses</option>
+        </select>
+      </div>
+      <div class="table-scroll">
+      <table>
+        <thead><tr><th>Photo</th><th>Order</th><th>Owner</th><th>Qty</th><th>Status</th><th>Total</th><th></th></tr></thead>
+        <tbody id="orders-body"></tbody>
+      </table>
+      </div>
+      <p class="empty-state" id="orders-empty" hidden>No orders match.</p>
+    </div>
+  </div>
+
+  <div class="access-denied" id="access-denied" style="display:none;">
+    <h1>Access denied</h1>
+    <p>This page is restricted to Bneera admin accounts.</p>
+  </div>
+</main>
+
+<!-- order view/edit modal -->
+<div class="modal-overlay" id="modal-overlay"></div>
+<div class="order-modal" id="order-modal" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="order-modal-head">
+    <h3 id="m-title">Order</h3>
+    <button class="order-modal-close" id="modal-close-btn" type="button" aria-label="Close">&times;</button>
+  </div>
+  <img class="detail-image" id="m-image" style="display:none;" alt="Order photo">
+  <p class="order-link-row"><strong>Owner:</strong> <span id="m-owner"></span></p>
+  <p class="order-link-row"><strong>Link:</strong> <a id="m-link" target="_blank" rel="noopener">Open link</a></p>
+  <p class="order-link-row"><strong>Quantity requested:</strong> <span id="m-qty"></span></p>
+  <div id="m-shipping-block" style="display:none;background:var(--bg-alt);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13.5px;">
+    <p class="order-link-row" style="margin:0 0 6px;"><strong>Ship to:</strong> <span id="m-ship-name"></span></p>
+    <p class="order-link-row" style="margin:0 0 6px;"><span id="m-ship-address"></span>, <span id="m-ship-city"></span></p>
+    <p class="order-link-row" style="margin:0;"><span id="m-ship-phone"></span></p>
+  </div>
+  <div class="order-row-2">
+    <div class="order-field">
+      <label for="m-price">Item price</label>
+      <input type="number" id="m-price" min="0" step="0.01">
+    </div>
+    <div class="order-field">
+      <label for="m-taxrate">Tax %</label>
+      <input type="number" id="m-taxrate" min="0" max="100" step="0.1">
+    </div>
+  </div>
+  <div class="order-row-2">
+    <div class="order-field">
+      <label for="m-weight">Item weight (kg)</label>
+      <input type="number" id="m-weight" min="0" step="0.01">
+    </div>
+    <div class="order-field">
+      <label for="m-shipping">Shipping price</label>
+      <input type="number" id="m-shipping" min="0" step="0.01">
+    </div>
+  </div>
+  <div class="order-field">
+    <label for="m-status">Status</label>
+    <select id="m-status"></select>
+  </div>
+  <div class="modal-total-row"><span>Total payable</span><span id="m-total">$0.00</span></div>
+  <button type="button" class="modal-save-btn" id="m-save-btn">Save changes</button>
+</div>
+
+<script>
+(function(){
+  var STATUSES = ['Pending','Processed','Confirmed','Purchased','Received','Shipped To Iraq','Arrived','Delivered','Canceled'];
+
+  function escapeHtml(str){
+    return String(str == null ? '' : str).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function renderUsers(users){
+    document.getElementById('users-count').textContent = users.length + (users.length === 1 ? ' account' : ' accounts');
+    var body = document.getElementById('users-body');
+    var empty = document.getElementById('users-empty');
+    if(users.length === 0){
+      body.innerHTML = '';
+      empty.hidden = false;
+      return;
+    }
+    empty.hidden = true;
+    body.innerHTML = users.map(function(u){
+      var joined = new Date(u.createdAt).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+      return '<tr>' +
+        '<td>' + escapeHtml(u.email) + '</td>' +
+        '<td>' + escapeHtml(u.fullName) + '</td>' +
+        '<td class="' + (u.role === 'admin' ? 'role-admin' : '') + '">' + escapeHtml(u.role) + '</td>' +
+        '<td class="mono">' + joined + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function statusOptionsHtml(current){
+    return STATUSES.map(function(s){
+      return '<option value="' + escapeHtml(s) + '"' + (s === current ? ' selected' : '') + '>' + escapeHtml(s) + '</option>';
+    }).join('');
+  }
+
+  function totalOf(o){
+    var price = Number(o.price) || 0;
+    var qty = Number(o.quantity) || 1;
+    var tax = Number(o.tax) || 0;
+    var shipping = Number(o.shipping) || 0;
+    return price * qty + tax + shipping;
+  }
+
+  var ordersById = {};
+
+  function renderOrders(orders){
+    document.getElementById('orders-count').textContent = orders.length + (orders.length === 1 ? ' order' : ' orders');
+    var body = document.getElementById('orders-body');
+    var empty = document.getElementById('orders-empty');
+    ordersById = {};
+    orders.forEach(function(o){ ordersById[o.id] = o; });
+
+    if(orders.length === 0){
+      body.innerHTML = '';
+      empty.hidden = false;
+      return;
+    }
+    empty.hidden = true;
+
+    body.innerHTML = orders.map(function(o){
+      var thumb = o.image
+        ? '<img class="thumb" src="' + o.image + '" alt="">'
+        : '<div class="thumb"></div>';
+      return '<tr data-id="' + escapeHtml(o.id) + '">' +
+        '<td>' + thumb + '</td>' +
+        '<td class="mono">#' + escapeHtml(o.id) + '</td>' +
+        '<td>' + escapeHtml(o.ownerFullName) + '<br><span class="mono" style="color:var(--ink-faint);font-size:12px;">' + escapeHtml(o.ownerEmail) + '</span></td>' +
+        '<td>' + escapeHtml(o.quantity) + '</td>' +
+        '<td><span class="status-pill">' + escapeHtml(o.status) + '</span></td>' +
+        '<td class="mono total-cell">$' + totalOf(o).toFixed(2) + '</td>' +
+        '<td><button type="button" class="btn-view" data-id="' + escapeHtml(o.id) + '">View / Edit</button></td>' +
+      '</tr>';
+    }).join('');
+
+    body.querySelectorAll('.btn-view').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        openOrderModal(ordersById[btn.getAttribute('data-id')]);
+      });
+    });
+  }
+
+  /* view/edit modal */
+  var modalOverlay = document.getElementById('modal-overlay');
+  var orderModal = document.getElementById('order-modal');
+  var modalCloseBtn = document.getElementById('modal-close-btn');
+  var mTitle = document.getElementById('m-title');
+  var mImage = document.getElementById('m-image');
+  var mOwner = document.getElementById('m-owner');
+  var mLink = document.getElementById('m-link');
+  var mQty = document.getElementById('m-qty');
+  var mPrice = document.getElementById('m-price');
+  var mTaxRate = document.getElementById('m-taxrate');
+  var mWeight = document.getElementById('m-weight');
+  var mShipping = document.getElementById('m-shipping');
+  var mStatus = document.getElementById('m-status');
+  var mTotal = document.getElementById('m-total');
+  var mSaveBtn = document.getElementById('m-save-btn');
+  var currentOrderId = null;
+
+  mStatus.innerHTML = statusOptionsHtml();
+
+  /* search + filters */
+  var ordersStatusFilter = document.getElementById('orders-status-filter');
+  STATUSES.forEach(function(s){
+    var opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    ordersStatusFilter.appendChild(opt);
+  });
+  document.getElementById('users-search').addEventListener('input', applyUsersFilter);
+  document.getElementById('users-role-filter').addEventListener('change', applyUsersFilter);
+  document.getElementById('orders-search').addEventListener('input', applyOrdersFilter);
+  ordersStatusFilter.addEventListener('change', applyOrdersFilter);
+
+  function refreshModalTotal(){
+    var price = Number(mPrice.value) || 0;
+    var qty = Number(mQty.textContent) || 1;
+    var taxRate = Number(mTaxRate.value) || 0;
+    var shipping = Number(mShipping.value) || 0;
+    var tax = price * qty * (taxRate / 100);
+    mTotal.textContent = '$' + (price * qty + tax + shipping).toFixed(2);
+  }
+  [mPrice, mTaxRate, mShipping].forEach(function(input){
+    input.addEventListener('input', refreshModalTotal);
+  });
+
+  function openOrderModal(order){
+    currentOrderId = order.id;
+    mTitle.textContent = 'Order #' + order.id;
+    mOwner.textContent = order.ownerFullName + ' (' + order.ownerEmail + ')';
+    if(order.image){ mImage.src = order.image; mImage.style.display = 'block'; }
+    else { mImage.removeAttribute('src'); mImage.style.display = 'none'; }
+    mLink.href = order.link;
+    mLink.textContent = order.link;
+    mQty.textContent = order.quantity;
+    var shipBlock = document.getElementById('m-shipping-block');
+    if(order.shippingDetails){
+      shipBlock.style.display = 'block';
+      document.getElementById('m-ship-name').textContent = order.shippingDetails.firstName + ' ' + order.shippingDetails.lastName;
+      document.getElementById('m-ship-address').textContent = order.shippingDetails.address;
+      document.getElementById('m-ship-city').textContent = order.shippingDetails.city;
+      document.getElementById('m-ship-phone').textContent = order.shippingDetails.phone + (order.shippingDetails.phone2 ? ' / ' + order.shippingDetails.phone2 : '');
+    } else {
+      shipBlock.style.display = 'none';
+    }
+    mPrice.value = order.price;
+    mTaxRate.value = order.taxRate;
+    mWeight.value = order.weight;
+    mShipping.value = order.shipping;
+    mStatus.value = order.status;
+    refreshModalTotal();
+    modalOverlay.classList.add('open');
+    orderModal.classList.add('open');
+    orderModal.setAttribute('aria-hidden', 'false');
+  }
+  function closeOrderModal(){
+    modalOverlay.classList.remove('open');
+    orderModal.classList.remove('open');
+    orderModal.setAttribute('aria-hidden', 'true');
+    currentOrderId = null;
+  }
+  modalOverlay.addEventListener('click', closeOrderModal);
+  modalCloseBtn.addEventListener('click', closeOrderModal);
+
+  mSaveBtn.addEventListener('click', function(){
+    if(!currentOrderId){ return; }
+    var id = currentOrderId;
+    mSaveBtn.disabled = true;
+    mSaveBtn.textContent = 'Saving...';
+
+    Promise.all([
+      fetch('/api/orders/' + encodeURIComponent(id) + '/details', {
+        method: 'PATCH', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ price: mPrice.value, taxRate: mTaxRate.value, weight: mWeight.value, shipping: mShipping.value })
+      }).then(function(res){ return res.json().then(function(data){ return { ok: res.ok, data: data }; }); }),
+      fetch('/api/orders/' + encodeURIComponent(id) + '/status', {
+        method: 'PATCH', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: mStatus.value })
+      }).then(function(res){ return res.json().then(function(data){ return { ok: res.ok, data: data }; }); })
+    ]).then(function(results){
+      mSaveBtn.disabled = false;
+      mSaveBtn.textContent = 'Save changes';
+      var failed = results.find(function(r){ return !r.ok; });
+      if(failed){
+        alert((failed.data.error && failed.data.error.message) || 'Failed to save.');
+        return;
+      }
+      closeOrderModal();
+      loadAll();
+    }).catch(function(){
+      mSaveBtn.disabled = false;
+      mSaveBtn.textContent = 'Save changes';
+      alert('Network error — try again.');
+    });
+  });
+
+  var allUsers = [];
+  var allOrders = [];
+
+  function applyUsersFilter(){
+    var q = document.getElementById('users-search').value.trim().toLowerCase();
+    var role = document.getElementById('users-role-filter').value;
+    var filtered = allUsers.filter(function(u){
+      if(role !== 'all' && u.role !== role){ return false; }
+      if(!q){ return true; }
+      return u.email.toLowerCase().indexOf(q) !== -1 || u.fullName.toLowerCase().indexOf(q) !== -1;
+    });
+    renderUsers(filtered);
+  }
+
+  function applyOrdersFilter(){
+    var q = document.getElementById('orders-search').value.trim().toLowerCase();
+    var status = document.getElementById('orders-status-filter').value;
+    var filtered = allOrders.filter(function(o){
+      if(status !== 'all' && o.status !== status){ return false; }
+      if(!q){ return true; }
+      return (
+        o.id.toLowerCase().indexOf(q) !== -1 ||
+        (o.ownerEmail || '').toLowerCase().indexOf(q) !== -1 ||
+        (o.ownerFullName || '').toLowerCase().indexOf(q) !== -1 ||
+        (o.link || '').toLowerCase().indexOf(q) !== -1
+      );
+    });
+    renderOrders(filtered);
+  }
+
+  function loadAll(){
+    Promise.all([
+      fetch('/api/admin/users', { credentials: 'same-origin' }).then(function(r){ return r.json(); }),
+      fetch('/api/admin/orders', { credentials: 'same-origin' }).then(function(r){ return r.json(); })
+    ]).then(function(results){
+      allUsers = results[0].users || [];
+      allOrders = results[1].orders || [];
+      applyUsersFilter();
+      applyOrdersFilter();
+    });
+  }
+
+  /* theme toggle */
+  var themeBtn = document.getElementById('theme-toggle-btn');
+  var savedTheme = 'light';
+  try{ savedTheme = localStorage.getItem('bneera-theme') || 'light'; }catch(e){}
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  themeBtn.addEventListener('click', function(){
+    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try{ localStorage.setItem('bneera-theme', next); }catch(e){}
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', function(){
+    fetch('/api/logout', { method: 'POST', credentials: 'same-origin' }).then(function(){
+      window.location.href = 'index.html';
+    });
+  });
+
+  /* auth guard: admin only */
+  fetch('/api/me', { credentials: 'same-origin' })
+    .then(function(res){ return res.json(); })
+    .then(function(data){
+      if(!data.user){
+        window.location.href = 'login.html';
+        return;
+      }
+      if(data.user.role !== 'admin'){
+        document.getElementById('access-denied').style.display = 'block';
+        return;
+      }
+      document.getElementById('admin-content').style.display = 'block';
+      loadAll();
+    });
+})();
+</script>
+</body>
+</html>

@@ -180,6 +180,16 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
 .order-card-id{font-size:12.5px;color:var(--ink-faint);}
 .order-card-meta{font-size:13.5px;color:var(--ink);margin-top:4px;font-weight:600;}
 .order-card-date{font-size:11px;color:var(--ink-faint);margin-top:6px;}
+.order-card-actions{display:flex;gap:8px;margin-top:10px;}
+.order-card-actions button{
+  flex:1;border-radius:7px;padding:7px 0;font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;
+  transition:opacity .15s ease;
+}
+.order-card-actions button:disabled{opacity:.55;cursor:wait;}
+.btn-confirm{background:var(--accent);color:var(--accent-ink);border:none;}
+.btn-confirm:hover{background:var(--accent-strong);}
+.btn-cancel-order{background:none;color:var(--danger);border:1px solid var(--danger);}
+.btn-cancel-order:hover{background:var(--danger);color:#fff;}
 .empty-state{padding:60px 0;text-align:center;color:var(--ink-faint);font-size:15px;}
 
 @media (max-width:640px){
@@ -230,7 +240,13 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
   padding:12px;font-family:var(--font-body);font-weight:600;font-size:14.5px;cursor:pointer;
 }
 .form-submit:hover{background:var(--accent-strong);}
-.detail-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;}
+.detail-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;}
+.detail-link-btn{
+  display:inline-block;background:var(--accent);color:var(--accent-ink);border-radius:7px;
+  padding:7px 14px;font-family:var(--font-body);font-weight:600;font-size:13px;text-decoration:none;
+}
+.detail-link-btn:hover{background:var(--accent-strong);}
+.detail-link-btn.disabled{pointer-events:none;background:var(--line);color:var(--ink-faint);}
 .detail-row:last-child{border-bottom:none;}
 .detail-row span:first-child{color:var(--ink-faint);}
 .detail-image{width:100%;border-radius:8px;margin-bottom:16px;max-height:220px;object-fit:cover;}
@@ -267,6 +283,9 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
       <button type="button" class="icon-btn" aria-label="Notifications" title="Notifications">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <span class="icon-dot"></span>
+      </button>
+      <button type="button" class="icon-btn" id="logout-btn" aria-label="Log out" title="Log out" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       </button>
     </div>
   </div>
@@ -396,17 +415,67 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
   </div>
   <img class="detail-image" id="d-image" style="display:none;" alt="Order photo">
   <div class="detail-row"><span>Status</span><span id="d-status"></span></div>
-  <div class="detail-row"><span>Link</span><a id="d-link" target="_blank" rel="noopener">Open link</a></div>
+  <div class="detail-row"><span>Product</span><a id="d-link" class="detail-link-btn" target="_blank" rel="noopener">Open Link ↗</a></div>
   <div class="detail-row"><span>Quantity</span><span id="d-qty"></span></div>
   <div class="detail-row"><span>Size</span><span id="d-size"></span></div>
   <div class="detail-row"><span>Color</span><span id="d-color"></span></div>
   <div class="detail-row"><span>Note</span><span id="d-note"></span></div>
+  <div class="detail-row"><span>Item price</span><span id="d-price" class="mono"></span></div>
+  <div class="detail-row"><span>Item weight</span><span id="d-weight" class="mono"></span></div>
+  <div class="detail-row"><span>Shipping &amp; Tax</span><span id="d-shipping-tax" class="mono"></span></div>
+  <div class="detail-row" style="font-weight:700;"><span>Total payable</span><span id="d-total" class="mono"></span></div>
   <div class="detail-row"><span>Created</span><span id="d-created" class="mono"></span></div>
+  <div id="d-shipping-block" style="display:none;background:var(--bg-alt);border-radius:8px;padding:12px 14px;margin-top:14px;font-size:13.5px;">
+    <p style="margin:0 0 6px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);">Shipping to</p>
+    <p style="margin:0 0 4px;font-weight:600;" id="d-ship-name"></p>
+    <p style="margin:0 0 4px;" id="d-ship-address"></p>
+    <p style="margin:0;" id="d-ship-phone"></p>
+  </div>
+</div>
+
+<!-- shipping details modal (shown before confirming an order) -->
+<div class="order-modal" id="shipping-modal" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="order-modal-head">
+    <h3>Confirm shipping details</h3>
+    <button class="order-modal-close" id="shipping-close-btn" type="button" aria-label="Close">&times;</button>
+  </div>
+  <p id="shipping-modal-note" style="font-size:13.5px;color:var(--ink-soft);margin:-8px 0 16px;"></p>
+  <form id="shipping-form" novalidate>
+    <div class="order-row-2">
+      <div class="order-field">
+        <label for="sh-first-name">First name</label>
+        <input type="text" id="sh-first-name" required>
+      </div>
+      <div class="order-field">
+        <label for="sh-last-name">Last name</label>
+        <input type="text" id="sh-last-name" required>
+      </div>
+    </div>
+    <div class="order-field">
+      <label for="sh-address">Full address</label>
+      <input type="text" id="sh-address" required>
+    </div>
+    <div class="order-field">
+      <label for="sh-city">City</label>
+      <input type="text" id="sh-city" required>
+    </div>
+    <div class="order-row-2">
+      <div class="order-field">
+        <label for="sh-phone">Phone number</label>
+        <input type="tel" id="sh-phone" required>
+      </div>
+      <div class="order-field">
+        <label for="sh-phone2">Second phone number (optional)</label>
+        <input type="tel" id="sh-phone2">
+      </div>
+    </div>
+    <p class="auth-error mono" id="shipping-error" style="display:none;color:var(--danger);font-size:13px;margin:0 0 12px;"></p>
+    <button type="submit" class="form-submit">Confirm order</button>
+  </form>
 </div>
 
 <script>
 (function(){
-  var STORAGE_KEY = 'bneeraBoxItOrders';
   var STATUSES = ['Pending','Processed','Confirmed','Purchased','Received','Shipped To Iraq','Arrived','Delivered','Canceled'];
   var STATUS_CLASS = {
     'Pending':'status-amber',
@@ -422,24 +491,13 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
   var ACTIVE_EXCLUDE = ['Delivered','Canceled'];
 
   function loadOrders(){
-    try{
-      var raw = localStorage.getItem(STORAGE_KEY);
-      var orders = raw ? JSON.parse(raw) : [];
-      var changed = false;
-      orders.forEach(function(o, i){
-        if(!o.id){ o.id = generateId(); changed = true; }
-        if(!o.status){ o.status = 'Pending'; changed = true; }
-        if(typeof o.createdAt !== 'number'){ o.createdAt = i; changed = true; }
-      });
-      if(changed){ saveOrders(orders); }
-      return orders;
-    } catch(e){ return []; }
-  }
-  function saveOrders(orders){
-    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(orders)); } catch(e){}
-  }
-  function generateId(){
-    return Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2,5).toUpperCase();
+    return fetch('/api/orders', { credentials: 'same-origin' })
+      .then(function(res){
+        if(res.status === 401){ window.location.href = 'login.html'; return { orders: [] }; }
+        return res.ok ? res.json() : { orders: [] };
+      })
+      .then(function(data){ return data.orders || []; })
+      .catch(function(){ return []; });
   }
   function formatPrice(n){
     var num = Number(n);
@@ -497,7 +555,7 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
   }
 
   function render(){
-    var orders = loadOrders();
+    loadOrders().then(function(orders){
     updateCounts(orders);
     var q = searchInput.value.trim().toLowerCase();
     var filtered = orders.filter(function(o){
@@ -516,6 +574,12 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
       return;
     }
     emptyEl.hidden = true;
+
+    // Confirm is only available once staff have processed the order, not while still Pending.
+    var CONFIRMABLE_FROM = ['Processed'];
+    // Once an order is Confirmed (or beyond), the customer can no longer cancel it themselves.
+    var CANCELABLE_FROM = ['Pending', 'Processed'];
+
     gridEl.innerHTML = filtered.map(function(o){
       var badgeClass = STATUS_CLASS[o.status] || 'status-amber';
       var price = Number(o.price) || 0;
@@ -523,11 +587,21 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
       var media = o.image
         ? '<img src="' + o.image + '" alt="">'
         : '<svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/></svg>';
+      var canConfirm = CONFIRMABLE_FROM.indexOf(o.status) !== -1;
+      var canCancel = CANCELABLE_FROM.indexOf(o.status) !== -1;
+      var actions = '';
+      if(canConfirm || canCancel){
+        actions = '<div class="order-card-actions">' +
+          (canConfirm ? '<button type="button" class="btn-confirm" data-action="confirm" data-id="' + escapeHtml(o.id) + '">Confirm</button>' : '') +
+          (canCancel ? '<button type="button" class="btn-cancel-order" data-action="cancel" data-id="' + escapeHtml(o.id) + '">Cancel</button>' : '') +
+        '</div>';
+      }
       return '<div class="order-card" data-id="' + escapeHtml(o.id) + '">' +
         '<div class="order-card-media">' + media + '<span class="status-badge ' + badgeClass + '">' + escapeHtml(o.status || 'Pending') + '</span></div>' +
         '<div class="order-card-body">' +
           '<div class="order-card-id mono">#' + escapeHtml(o.id) + '</div>' +
           '<div class="order-card-meta">Qty ' + qty + (o.size ? ' · ' + escapeHtml(o.size) : '') + ' · ' + formatPrice(price * qty) + '</div>' +
+          actions +
           '<div class="order-card-date mono">' + escapeHtml(o.day || '') + (o.time ? ' · ' + escapeHtml(o.time) : '') + '</div>' +
         '</div>' +
       '</div>';
@@ -537,6 +611,32 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
         var order = orders.filter(function(o){ return o.id === card.getAttribute('data-id'); })[0];
         if(order){ openDetail(order); }
       });
+    });
+    gridEl.querySelectorAll('[data-action]').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var id = btn.getAttribute('data-id');
+        var action = btn.getAttribute('data-action');
+        if(action === 'confirm'){ openShippingModal(id); return; }
+        if(!confirm('Cancel this order?')){ return; }
+        btn.disabled = true;
+        fetch('/api/orders/' + encodeURIComponent(id) + '/cancel', {
+          method: 'PATCH', credentials: 'same-origin'
+        }).then(function(res){
+          return res.json().then(function(data){ return { ok: res.ok, data: data }; });
+        }).then(function(result){
+          if(!result.ok){
+            alert((result.data.error && result.data.error.message) || 'Failed to update order.');
+            btn.disabled = false;
+            return;
+          }
+          render();
+        }).catch(function(){
+          alert('Network error — try again.');
+          btn.disabled = false;
+        });
+      });
+    });
     });
   }
 
@@ -559,7 +659,18 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
   var fNote = document.getElementById('f-note');
   var fDropzone = document.getElementById('f-dropzone');
   var fImage = document.getElementById('f-image');
-  var pendingImageData = '';
+  var shippingModal = document.getElementById('shipping-modal');
+  var shippingCloseBtn = document.getElementById('shipping-close-btn');
+  var shippingForm = document.getElementById('shipping-form');
+  var shippingNote = document.getElementById('shipping-modal-note');
+  var shippingError = document.getElementById('shipping-error');
+  var shFirstName = document.getElementById('sh-first-name');
+  var shLastName = document.getElementById('sh-last-name');
+  var shAddress = document.getElementById('sh-address');
+  var shCity = document.getElementById('sh-city');
+  var shPhone = document.getElementById('sh-phone');
+  var shPhone2 = document.getElementById('sh-phone2');
+  var pendingConfirmOrderId = null;
 
   function openModal(modal){
     overlay.classList.add('open');
@@ -570,14 +681,83 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
     overlay.classList.remove('open');
     createModal.classList.remove('open');
     detailModal.classList.remove('open');
+    shippingModal.classList.remove('open');
     createModal.setAttribute('aria-hidden','true');
     detailModal.setAttribute('aria-hidden','true');
+    shippingModal.setAttribute('aria-hidden','true');
   }
   overlay.addEventListener('click', closeModals);
   createCloseBtn.addEventListener('click', closeModals);
   detailCloseBtn.addEventListener('click', closeModals);
   detailBackBtn.addEventListener('click', closeModals);
+  shippingCloseBtn.addEventListener('click', closeModals);
   addOrderBtn.addEventListener('click', function(){ openModal(createModal); });
+
+  function openShippingModal(orderId){
+    pendingConfirmOrderId = orderId;
+    shippingError.style.display = 'none';
+    shippingForm.reset();
+    fetch('/api/me/shipping', { credentials: 'same-origin' })
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        var s = data.shipping;
+        if(s){
+          shippingNote.textContent = 'Please confirm these details are still accurate before we ship your order.';
+          shFirstName.value = s.firstName;
+          shLastName.value = s.lastName;
+          shAddress.value = s.address;
+          shCity.value = s.city;
+          shPhone.value = s.phone;
+          shPhone2.value = s.phone2 || '';
+        } else {
+          shippingNote.textContent = 'We need your shipping details once — they\'ll be saved for future orders.';
+        }
+        openModal(shippingModal);
+      })
+      .catch(function(){
+        shippingNote.textContent = 'We need your shipping details once — they\'ll be saved for future orders.';
+        openModal(shippingModal);
+      });
+  }
+
+  shippingForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    if(!pendingConfirmOrderId){ return; }
+    var submitBtn = shippingForm.querySelector('.form-submit');
+    submitBtn.disabled = true;
+    shippingError.style.display = 'none';
+
+    fetch('/api/orders/' + encodeURIComponent(pendingConfirmOrderId) + '/confirm', {
+      method: 'PATCH',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        firstName: shFirstName.value.trim(),
+        lastName: shLastName.value.trim(),
+        address: shAddress.value.trim(),
+        city: shCity.value.trim(),
+        phone: shPhone.value.trim(),
+        phone2: shPhone2.value.trim()
+      })
+    }).then(function(res){
+      return res.json().then(function(data){ return { ok: res.ok, data: data }; });
+    }).then(function(result){
+      submitBtn.disabled = false;
+      if(!result.ok){
+        var msg = (result.data.error && result.data.error.message) || 'Failed to confirm order.';
+        shippingError.textContent = msg;
+        shippingError.style.display = 'block';
+        return;
+      }
+      pendingConfirmOrderId = null;
+      closeModals();
+      render();
+    }).catch(function(){
+      submitBtn.disabled = false;
+      shippingError.textContent = 'Network error — check your connection and try again.';
+      shippingError.style.display = 'block';
+    });
+  });
 
   document.getElementById('f-qty-minus').addEventListener('click', function(){
     fQty.value = Math.max(1, (parseInt(fQty.value,10)||1) - 1);
@@ -588,40 +768,47 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
   fDropzone.addEventListener('click', function(){ fImage.click(); });
   fImage.addEventListener('change', function(){
     var file = fImage.files && fImage.files[0];
-    if(!file){ return; }
-    fDropzone.textContent = file.name;
-    var reader = new FileReader();
-    reader.onload = function(){ pendingImageData = reader.result; };
-    reader.readAsDataURL(file);
+    fDropzone.textContent = file ? file.name : 'Click to browse an image';
   });
 
   createForm.addEventListener('submit', function(e){
     e.preventDefault();
     if(!fLink.value.trim()){ createForm.reportValidity(); return; }
-    var now = new Date();
-    var order = {
-      id: generateId(),
-      status: 'Pending',
-      createdAt: now.getTime(),
-      link: fLink.value.trim(),
-      quantity: parseInt(fQty.value,10) || 1,
-      size: fSize.value.trim(),
-      color: fColor.value.trim(),
-      note: fNote.value.trim(),
-      image: pendingImageData,
-      price: 0, tax: 0, shipping: 0, weight: 0,
-      day: now.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}),
-      time: now.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'})
-    };
-    var orders = loadOrders();
-    orders.push(order);
-    saveOrders(orders);
-    createForm.reset();
-    fQty.value = 1;
-    fDropzone.textContent = 'Click to browse an image';
-    pendingImageData = '';
-    closeModals();
-    render();
+    var submitBtn = createForm.querySelector('.form-submit');
+    submitBtn.disabled = true;
+
+    var formData = new FormData();
+    formData.append('link', fLink.value.trim());
+    formData.append('quantity', parseInt(fQty.value,10) || 1);
+    formData.append('size', fSize.value.trim());
+    formData.append('color', fColor.value.trim());
+    formData.append('note', fNote.value.trim());
+    var file = fImage.files && fImage.files[0];
+    if(file){ formData.append('image', file); }
+
+    fetch('/api/orders', {
+      method: 'POST',
+      credentials: 'same-origin',
+      body: formData
+    }).then(function(res){
+      if(res.status === 401){ window.location.href = 'login.html'; return null; }
+      return res.json().then(function(data){ return { ok: res.ok, data: data }; });
+    }).then(function(result){
+      submitBtn.disabled = false;
+      if(!result){ return; }
+      if(!result.ok){
+        alert((result.data && result.data.error && result.data.error.message) || 'Something went wrong — try again.');
+        return;
+      }
+      createForm.reset();
+      fQty.value = 1;
+      fDropzone.textContent = 'Click to browse an image';
+      closeModals();
+      render();
+    }).catch(function(){
+      submitBtn.disabled = false;
+      alert('Network error — check your connection and try again.');
+    });
   });
 
   function openDetail(order){
@@ -629,16 +816,41 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
     var badgeClass = STATUS_CLASS[order.status] || 'status-amber';
     document.getElementById('d-status').innerHTML = '<span class="status-badge ' + badgeClass + '" style="position:static;">' + escapeHtml(order.status || 'Pending') + '</span>';
     var linkEl = document.getElementById('d-link');
-    if(order.link){ linkEl.href = order.link; linkEl.textContent = order.link; }
-    else { linkEl.removeAttribute('href'); linkEl.textContent = '—'; }
+    if(order.link){
+      linkEl.href = order.link;
+      linkEl.textContent = 'Open Link ↗';
+      linkEl.classList.remove('disabled');
+    } else {
+      linkEl.removeAttribute('href');
+      linkEl.textContent = 'No link';
+      linkEl.classList.add('disabled');
+    }
     document.getElementById('d-qty').textContent = order.quantity || '—';
     document.getElementById('d-size').textContent = order.size || '—';
     document.getElementById('d-color').textContent = order.color || '—';
     document.getElementById('d-note').textContent = order.note || '—';
+    var price = Number(order.price) || 0;
+    var qty = Number(order.quantity) || 1;
+    var tax = Number(order.tax) || 0;
+    var shipping = Number(order.shipping) || 0;
+    var weight = Number(order.weight) || 0;
+    document.getElementById('d-price').textContent = formatPrice(price);
+    document.getElementById('d-weight').textContent = weight > 0 ? weight.toFixed(2) + ' kg' : '—';
+    document.getElementById('d-shipping-tax').textContent = formatPrice(shipping + tax);
+    document.getElementById('d-total').textContent = formatPrice(price * qty + tax + shipping);
     document.getElementById('d-created').textContent = (order.day || '') + (order.time ? ' · ' + order.time : '');
     var imgEl = document.getElementById('d-image');
     if(order.image){ imgEl.src = order.image; imgEl.style.display = 'block'; }
     else { imgEl.style.display = 'none'; }
+    var shipBlock = document.getElementById('d-shipping-block');
+    if(order.shippingDetails){
+      shipBlock.style.display = 'block';
+      document.getElementById('d-ship-name').textContent = order.shippingDetails.firstName + ' ' + order.shippingDetails.lastName;
+      document.getElementById('d-ship-address').textContent = order.shippingDetails.address + ', ' + order.shippingDetails.city;
+      document.getElementById('d-ship-phone').textContent = order.shippingDetails.phone + (order.shippingDetails.phone2 ? ' / ' + order.shippingDetails.phone2 : '');
+    } else {
+      shipBlock.style.display = 'none';
+    }
     openModal(detailModal);
   }
 
@@ -678,8 +890,29 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
     });
   }
 
-  buildTabs();
-  render();
+  /* auth guard + logout */
+  var logoutBtn = document.getElementById('logout-btn');
+  fetch('/api/me', { credentials: 'same-origin' })
+    .then(function(res){ return res.json(); })
+    .then(function(data){
+      if(!data.user){
+        window.location.href = 'login.html';
+        return;
+      }
+      logoutBtn.style.display = '';
+      buildTabs();
+      render();
+    })
+    .catch(function(){
+      buildTabs();
+      render();
+    });
+
+  logoutBtn.addEventListener('click', function(){
+    fetch('/api/logout', { method: 'POST', credentials: 'same-origin' }).then(function(){
+      window.location.href = 'index.html';
+    });
+  });
 })();
 </script>
 </body>
