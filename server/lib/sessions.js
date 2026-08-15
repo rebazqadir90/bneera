@@ -2,8 +2,13 @@ import { randomBytes } from 'node:crypto';
 
 export const SESSION_COOKIE = 'sid';
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days, sliding
+export const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 export function generateSessionId() {
+  return randomBytes(32).toString('base64url');
+}
+
+export function generateResetToken() {
   return randomBytes(32).toString('base64url');
 }
 

@@ -26,7 +26,7 @@ export function createApp({ dbPath, uploadDir, publicDir, adminEmails = [], isPr
   app.use(express.json());
   app.use(auth.attachSessionUser);
 
-  app.use('/api', createAuthRoutes({ stmts, auth, adminEmails, isProduction }));
+  app.use('/api', createAuthRoutes({ stmts, auth, upload, adminEmails, isProduction }));
   app.use('/api', createLeadsRoutes({ stmts }));
   app.use('/api', createOrdersRoutes({ stmts, auth, upload }));
   app.use('/api', createAdminRoutes({ stmts, auth }));

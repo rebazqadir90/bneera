@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
   full_name     TEXT NOT NULL,
   password_hash TEXT NOT NULL,
   role          TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user','admin')),
+  avatar        TEXT NOT NULL DEFAULT '',
   created_at    INTEGER NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);
@@ -73,6 +74,14 @@ CREATE TABLE IF NOT EXISTS shipping_profiles (
   phone2     TEXT NOT NULL DEFAULT '',
   updated_at INTEGER NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  token      TEXT PRIMARY KEY,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_reset_tokens_user_id ON password_reset_tokens(user_id);
 `;
 
 function addColumnIfMissing(db, table, columnDdl) {
@@ -87,6 +96,7 @@ export function openDb(dbPath) {
   const db = new DatabaseSync(dbPath);
   db.exec(SCHEMA);
   // Migrations for databases created before these columns existed.
+  addColumnIfMissing(db, 'users', `avatar TEXT NOT NULL DEFAULT ''`);
   addColumnIfMissing(db, 'orders', `tax_rate REAL NOT NULL DEFAULT 0`);
   addColumnIfMissing(db, 'orders', `ship_first_name TEXT NOT NULL DEFAULT ''`);
   addColumnIfMissing(db, 'orders', `ship_last_name TEXT NOT NULL DEFAULT ''`);
@@ -144,6 +154,18 @@ export function createStatements(db) {
       first_name = excluded.first_name, last_name = excluded.last_name, address = excluded.address,
       city = excluded.city, phone = excluded.phone, phone2 = excluded.phone2, updated_at = excluded.updated_at
   `);
+
+  const updateUserPasswordStmt = db.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`);
+  const updateUserAvatarStmt = db.prepare(`UPDATE users SET avatar = ? WHERE id = ?`);
+  const deleteSessionsByUserStmt = db.prepare(`DELETE FROM sessions WHERE user_id = ?`);
+  const deleteOtherSessionsStmt = db.prepare(`DELETE FROM sessions WHERE user_id = ? AND id != ?`);
+
+  const insertResetTokenStmt = db.prepare(
+    `INSERT INTO password_reset_tokens (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)`
+  );
+  const getResetTokenStmt = db.prepare(`SELECT * FROM password_reset_tokens WHERE token = ?`);
+  const deleteResetTokenStmt = db.prepare(`DELETE FROM password_reset_tokens WHERE token = ?`);
+  const deleteResetTokensByUserStmt = db.prepare(`DELETE FROM password_reset_tokens WHERE user_id = ?`);
 
   const getAllUsersStmt = db.prepare(`SELECT id, email, full_name, role, created_at FROM users ORDER BY created_at DESC`);
   const getAllOrdersWithOwnerStmt = db.prepare(`
@@ -229,6 +251,33 @@ export function createStatements(db) {
 
     insertLead({ email }) {
       insertLeadStmt.run(email, Date.now());
+    },
+
+    updateUserPassword(userId, passwordHash) {
+      updateUserPasswordStmt.run(passwordHash, userId);
+    },
+    updateUserAvatar(userId, avatarPath) {
+      updateUserAvatarStmt.run(avatarPath, userId);
+      return getUserByIdStmt.get(userId);
+    },
+    deleteSessionsByUser(userId) {
+      deleteSessionsByUserStmt.run(userId);
+    },
+    deleteOtherSessions(userId, keepSessionId) {
+      deleteOtherSessionsStmt.run(userId, keepSessionId);
+    },
+
+    insertResetToken({ token, userId, expiresAt }) {
+      insertResetTokenStmt.run(token, userId, Date.now(), expiresAt);
+    },
+    getResetToken(token) {
+      return getResetTokenStmt.get(token);
+    },
+    deleteResetToken(token) {
+      deleteResetTokenStmt.run(token);
+    },
+    deleteResetTokensByUser(userId) {
+      deleteResetTokensByUserStmt.run(userId);
     },
 
     getAllUsers() {
