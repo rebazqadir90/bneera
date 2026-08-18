@@ -100,6 +100,13 @@ export function createOrdersRoutes({ stmts, auth, upload }) {
       return res.status(404).json({ error: { message: 'Order not found' } });
     }
     const order = stmts.updateOrderStatus(req.params.id, status);
+    if (existing.status !== status) {
+      stmts.insertNotification({
+        userId: existing.user_id,
+        orderId: order.id,
+        message: `Order #${order.id} status changed from ${existing.status} to ${status}`
+      });
+    }
     res.status(200).json({ order: toPublicOrder(order) });
   });
 
@@ -142,6 +149,11 @@ export function createOrdersRoutes({ stmts, auth, upload }) {
 
     stmts.upsertShippingProfile(req.user.id, shipping);
     const updated = stmts.confirmOrderWithShipping(req.params.id, shipping);
+    stmts.insertNotification({
+      userId: req.user.id,
+      orderId: updated.id,
+      message: `Order #${updated.id} status changed from ${order.status} to Confirmed`
+    });
     res.status(200).json({ order: toPublicOrder(updated) });
   });
 
@@ -154,6 +166,11 @@ export function createOrdersRoutes({ stmts, auth, upload }) {
       return res.status(409).json({ error: { message: `Order can't be canceled from status "${order.status}"` } });
     }
     const updated = stmts.updateOrderStatus(req.params.id, 'Canceled');
+    stmts.insertNotification({
+      userId: req.user.id,
+      orderId: updated.id,
+      message: `Order #${updated.id} status changed from ${order.status} to Canceled`
+    });
     res.status(200).json({ order: toPublicOrder(updated) });
   });
 

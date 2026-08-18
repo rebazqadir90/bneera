@@ -82,6 +82,16 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
   expires_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_reset_tokens_user_id ON password_reset_tokens(user_id);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  order_id   TEXT REFERENCES orders(id) ON DELETE CASCADE,
+  message    TEXT NOT NULL,
+  is_read    INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 `;
 
 function addColumnIfMissing(db, table, columnDdl) {
@@ -166,6 +176,22 @@ export function createStatements(db) {
   const getResetTokenStmt = db.prepare(`SELECT * FROM password_reset_tokens WHERE token = ?`);
   const deleteResetTokenStmt = db.prepare(`DELETE FROM password_reset_tokens WHERE token = ?`);
   const deleteResetTokensByUserStmt = db.prepare(`DELETE FROM password_reset_tokens WHERE user_id = ?`);
+
+  const insertNotificationStmt = db.prepare(
+    `INSERT INTO notifications (user_id, order_id, message, is_read, created_at) VALUES (?, ?, ?, 0, ?)`
+  );
+  const getNotificationsByUserStmt = db.prepare(
+    `SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50`
+  );
+  const getUnreadNotificationCountStmt = db.prepare(
+    `SELECT COUNT(*) AS c FROM notifications WHERE user_id = ? AND is_read = 0`
+  );
+  const markNotificationReadStmt = db.prepare(
+    `UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?`
+  );
+  const markAllNotificationsReadStmt = db.prepare(
+    `UPDATE notifications SET is_read = 1 WHERE user_id = ?`
+  );
 
   const getAllUsersStmt = db.prepare(`SELECT id, email, full_name, role, created_at FROM users ORDER BY created_at DESC`);
   const getAllOrdersWithOwnerStmt = db.prepare(`
@@ -265,6 +291,22 @@ export function createStatements(db) {
     },
     deleteOtherSessions(userId, keepSessionId) {
       deleteOtherSessionsStmt.run(userId, keepSessionId);
+    },
+
+    insertNotification({ userId, orderId = null, message }) {
+      insertNotificationStmt.run(userId, orderId, message, Date.now());
+    },
+    getNotificationsByUser(userId) {
+      return getNotificationsByUserStmt.all(userId);
+    },
+    getUnreadNotificationCount(userId) {
+      return getUnreadNotificationCountStmt.get(userId).c;
+    },
+    markNotificationRead(id, userId) {
+      markNotificationReadStmt.run(id, userId);
+    },
+    markAllNotificationsRead(userId) {
+      markAllNotificationsReadStmt.run(userId);
     },
 
     insertResetToken({ token, userId, expiresAt }) {

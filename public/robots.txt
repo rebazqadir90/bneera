@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /orders.html
+Disallow: /account.html
+Disallow: /admin.html
+Disallow: /uploads/
+
+Sitemap: https://www.bneera.com/sitemap.xml

@@ -89,6 +89,27 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
 .lang-option{display:block;width:100%;text-align:left;background:none;border:none;border-radius:4px;padding:8px 10px;font-family:var(--font-body);font-size:13.5px;color:var(--ink);cursor:pointer;}
 .lang-option:hover{background:var(--bg-alt);}
 
+.notif-wrap{position:relative;}
+.notif-menu{
+  display:none;flex-direction:column;position:absolute;top:calc(100% + 8px);right:0;
+  background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);
+  width:320px;max-width:90vw;max-height:400px;overflow-y:auto;z-index:50;
+}
+.notif-menu.open{display:flex;}
+.notif-menu-head{
+  display:flex;align-items:center;justify-content:space-between;padding:12px 14px;
+  border-bottom:1px solid var(--line);font-weight:700;font-size:13.5px;position:sticky;top:0;background:var(--card);
+}
+.notif-menu-head button{background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;font-weight:500;}
+.notif-menu-head button:hover{text-decoration:underline;}
+.notif-item{padding:12px 14px;border-bottom:1px solid var(--line);font-size:13px;cursor:pointer;}
+.notif-item:last-child{border-bottom:none;}
+.notif-item:hover{background:var(--bg-alt);}
+.notif-item.unread{background:rgba(31,122,108,0.06);}
+.notif-item-msg{color:var(--ink);line-height:1.4;}
+.notif-item-time{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);margin-top:4px;}
+.notif-empty{padding:24px 14px;text-align:center;color:var(--ink-faint);font-size:13px;margin:0;}
+
 /* page head */
 .page-head{padding:36px 0 22px;}
 .breadcrumb{margin-top:8px;font-size:13.5px;color:var(--ink-faint);}
@@ -280,10 +301,20 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
       <button type="button" class="icon-btn" id="theme-toggle-btn" aria-label="Toggle theme" title="Toggle theme">
         <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
       </button>
-      <button type="button" class="icon-btn" aria-label="Notifications" title="Notifications">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <span class="icon-dot"></span>
-      </button>
+      <div class="notif-wrap">
+        <button type="button" class="icon-btn" id="notif-btn" aria-label="Notifications" title="Notifications" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="icon-dot" id="notif-dot" style="display:none;"></span>
+        </button>
+        <div class="notif-menu" id="notif-menu">
+          <div class="notif-menu-head">
+            <span>Notifications</span>
+            <button type="button" id="notif-mark-all">Mark all read</button>
+          </div>
+          <div id="notif-list"></div>
+          <p class="notif-empty" id="notif-empty" hidden>No notifications yet.</p>
+        </div>
+      </div>
       <a href="account.html" class="icon-btn" id="account-btn" aria-label="Account" title="Account" style="display:none;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       </a>
@@ -634,6 +665,7 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
             return;
           }
           render();
+          notifDot.style.display = 'block';
         }).catch(function(){
           alert('Network error — try again.');
           btn.disabled = false;
@@ -755,6 +787,7 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
       pendingConfirmOrderId = null;
       closeModals();
       render();
+      notifDot.style.display = 'block';
     }).catch(function(){
       submitBtn.disabled = false;
       shippingError.textContent = 'Network error — check your connection and try again.';
@@ -893,6 +926,77 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
     });
   }
 
+  /* notifications */
+  var notifBtn = document.getElementById('notif-btn');
+  var notifMenu = document.getElementById('notif-menu');
+  var notifDot = document.getElementById('notif-dot');
+  var notifList = document.getElementById('notif-list');
+  var notifEmpty = document.getElementById('notif-empty');
+  var notifMarkAllBtn = document.getElementById('notif-mark-all');
+
+  function relativeTime(ts){
+    var diff = Date.now() - ts;
+    var mins = Math.floor(diff / 60000);
+    if(mins < 1){ return 'just now'; }
+    if(mins < 60){ return mins + 'm ago'; }
+    var hours = Math.floor(mins / 60);
+    if(hours < 24){ return hours + 'h ago'; }
+    var days = Math.floor(hours / 24);
+    return days + 'd ago';
+  }
+
+  function loadNotifications(){
+    fetch('/api/notifications', { credentials: 'same-origin' })
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        var notifications = data.notifications || [];
+        notifDot.style.display = data.unreadCount > 0 ? 'block' : 'none';
+        if(notifications.length === 0){
+          notifList.innerHTML = '';
+          notifEmpty.hidden = false;
+          return;
+        }
+        notifEmpty.hidden = true;
+        notifList.innerHTML = notifications.map(function(n){
+          return '<div class="notif-item' + (n.read ? '' : ' unread') + '" data-id="' + n.id + '">' +
+            '<div class="notif-item-msg">' + escapeHtml(n.message) + '</div>' +
+            '<div class="notif-item-time">' + relativeTime(n.createdAt) + '</div>' +
+          '</div>';
+        }).join('');
+        notifList.querySelectorAll('.notif-item').forEach(function(item){
+          item.addEventListener('click', function(){
+            if(item.classList.contains('unread')){
+              item.classList.remove('unread');
+              fetch('/api/notifications/' + item.getAttribute('data-id') + '/read', { method: 'POST', credentials: 'same-origin' })
+                .then(function(){
+                  var stillUnread = notifList.querySelectorAll('.notif-item.unread').length;
+                  notifDot.style.display = stillUnread > 0 ? 'block' : 'none';
+                });
+            }
+          });
+        });
+      });
+  }
+
+  notifBtn.addEventListener('click', function(e){
+    e.stopPropagation();
+    var open = notifMenu.classList.toggle('open');
+    notifBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if(open){ loadNotifications(); }
+  });
+  notifMarkAllBtn.addEventListener('click', function(e){
+    e.stopPropagation();
+    fetch('/api/notifications/read-all', { method: 'POST', credentials: 'same-origin' }).then(function(){
+      loadNotifications();
+    });
+  });
+  document.addEventListener('click', function(e){
+    if(!notifMenu.contains(e.target) && e.target !== notifBtn){
+      notifMenu.classList.remove('open');
+      notifBtn.setAttribute('aria-expanded','false');
+    }
+  });
+
   /* auth guard + logout */
   var logoutBtn = document.getElementById('logout-btn');
   var accountBtn = document.getElementById('account-btn');
@@ -907,6 +1011,9 @@ h1{font-family:var(--font-display);text-transform:uppercase;margin:0;font-size:c
       accountBtn.style.display = '';
       buildTabs();
       render();
+      fetch('/api/notifications', { credentials: 'same-origin' })
+        .then(function(res){ return res.json(); })
+        .then(function(data){ notifDot.style.display = data.unreadCount > 0 ? 'block' : 'none'; });
     })
     .catch(function(){
       buildTabs();

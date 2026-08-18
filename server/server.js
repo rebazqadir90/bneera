@@ -7,6 +7,7 @@ import { createAuthRoutes } from './routes/auth.routes.js';
 import { createLeadsRoutes } from './routes/leads.routes.js';
 import { createOrdersRoutes } from './routes/orders.routes.js';
 import { createAdminRoutes } from './routes/admin.routes.js';
+import { createNotificationsRoutes } from './routes/notifications.routes.js';
 import { createUploadMiddleware } from './lib/upload.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -30,6 +31,7 @@ export function createApp({ dbPath, uploadDir, publicDir, adminEmails = [], isPr
   app.use('/api', createLeadsRoutes({ stmts }));
   app.use('/api', createOrdersRoutes({ stmts, auth, upload }));
   app.use('/api', createAdminRoutes({ stmts, auth }));
+  app.use('/api', createNotificationsRoutes({ stmts, auth }));
 
   app.use('/uploads', auth.requireAuth, express.static(resolvedUploadDir));
   app.use(express.static(resolvedPublicDir, { index: 'index.html' }));
