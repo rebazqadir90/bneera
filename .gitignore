@@ -5,3 +5,5 @@ data.sqlite-wal
 data.sqlite-shm
 public/uploads/
 .env
+.vercel
+.env*

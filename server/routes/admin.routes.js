@@ -9,18 +9,22 @@ export function createAdminRoutes({ stmts, auth }) {
   const router = Router();
   const { requireAdmin } = auth;
 
-  router.get('/admin/users', requireAdmin, (req, res) => {
-    const users = stmts.getAllUsers().map(toPublicAdminUser);
-    res.status(200).json({ users, count: users.length });
+  router.get('/admin/users', requireAdmin, async (req, res, next) => {
+    try {
+      const users = (await stmts.getAllUsers()).map(toPublicAdminUser);
+      res.status(200).json({ users, count: users.length });
+    } catch (err) { next(err); }
   });
 
-  router.get('/admin/orders', requireAdmin, (req, res) => {
-    const orders = stmts.getAllOrdersWithOwner().map((o) => ({
-      ...toPublicOrder(o),
-      ownerEmail: o.owner_email,
-      ownerFullName: o.owner_full_name
-    }));
-    res.status(200).json({ orders, count: orders.length });
+  router.get('/admin/orders', requireAdmin, async (req, res, next) => {
+    try {
+      const orders = (await stmts.getAllOrdersWithOwner()).map((o) => ({
+        ...toPublicOrder(o),
+        ownerEmail: o.owner_email,
+        ownerFullName: o.owner_full_name
+      }));
+      res.status(200).json({ orders, count: orders.length });
+    } catch (err) { next(err); }
   });
 
   return router;

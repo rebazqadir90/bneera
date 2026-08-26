@@ -1,16 +1,13 @@
 import http from 'node:http';
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
-import crypto from 'node:crypto';
-import { createApp } from '../../server/server.js';
+import { createApp } from '../../server/app.js';
 
 export async function startTestServer({ adminEmails = [] } = {}) {
-  const tmpId = crypto.randomUUID();
-  const dbPath = path.join(os.tmpdir(), `bneera-test-${tmpId}.sqlite`);
-  const uploadDir = path.join(os.tmpdir(), `bneera-test-uploads-${tmpId}`);
+  const connectionString = process.env.TEST_DATABASE_URL;
+  if (!connectionString) {
+    throw new Error('TEST_DATABASE_URL is not set. Point it at a Postgres database to run the test suite.');
+  }
 
-  const app = createApp({ dbPath, uploadDir, adminEmails, isProduction: false });
+  const app = createApp({ connectionString, adminEmails, isProduction: false });
   const server = http.createServer(app);
 
   await new Promise((resolve) => server.listen(0, resolve));
@@ -21,11 +18,7 @@ export async function startTestServer({ adminEmails = [] } = {}) {
     baseUrl,
     async close() {
       await new Promise((resolve) => server.close(resolve));
-      app.locals.db.close();
-      for (const p of [dbPath, `${dbPath}-wal`, `${dbPath}-shm`]) {
-        fs.rmSync(p, { force: true });
-      }
-      fs.rmSync(uploadDir, { recursive: true, force: true });
+      await app.locals.pool.end();
     }
   };
 }

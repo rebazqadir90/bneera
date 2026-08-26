@@ -1,4 +1,11 @@
-import { DatabaseSync } from 'node:sqlite';
+import pg from 'pg';
+
+const { Pool, types } = pg;
+
+// BIGINT (OID 20) is returned as a string by default to avoid precision loss on huge values.
+// Every BIGINT column here stores Date.now() (~1.8 trillion), safely within Number.MAX_SAFE_INTEGER,
+// so parse it as a real JS number globally instead of scattering Number() calls at every call site.
+types.setTypeParser(20, (val) => parseInt(val, 10));
 
 export const STATUSES = [
   'Pending', 'Processed', 'Confirmed', 'Purchased', 'Received',
@@ -6,25 +13,22 @@ export const STATUSES = [
 ];
 
 const SCHEMA = `
-PRAGMA journal_mode = WAL;
-PRAGMA foreign_keys = ON;
-
 CREATE TABLE IF NOT EXISTS users (
-  id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  email         TEXT NOT NULL COLLATE NOCASE,
+  id            INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  email         TEXT NOT NULL,
   full_name     TEXT NOT NULL,
   password_hash TEXT NOT NULL,
   role          TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user','admin')),
   avatar        TEXT NOT NULL DEFAULT '',
-  created_at    INTEGER NOT NULL
+  created_at    BIGINT NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users (LOWER(email));
 
 CREATE TABLE IF NOT EXISTS sessions (
   id         TEXT PRIMARY KEY,
   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  created_at INTEGER NOT NULL,
-  expires_at INTEGER NOT NULL
+  created_at BIGINT NOT NULL,
+  expires_at BIGINT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
@@ -35,18 +39,18 @@ CREATE TABLE IF NOT EXISTS orders (
   status     TEXT NOT NULL DEFAULT 'Pending' CHECK (status IN (
                'Pending','Processed','Confirmed','Purchased','Received',
                'Shipped To Iraq','Arrived','Delivered','Canceled')),
-  created_at INTEGER NOT NULL,
+  created_at BIGINT NOT NULL,
   link       TEXT NOT NULL,
   quantity   INTEGER NOT NULL CHECK (quantity > 0),
   size       TEXT NOT NULL DEFAULT '',
   color      TEXT NOT NULL DEFAULT '',
   note       TEXT NOT NULL DEFAULT '',
   image      TEXT NOT NULL DEFAULT '',
-  price      REAL NOT NULL DEFAULT 0,
-  tax        REAL NOT NULL DEFAULT 0,
-  tax_rate   REAL NOT NULL DEFAULT 0,
-  shipping   REAL NOT NULL DEFAULT 0,
-  weight     REAL NOT NULL DEFAULT 0,
+  price      DOUBLE PRECISION NOT NULL DEFAULT 0,
+  tax        DOUBLE PRECISION NOT NULL DEFAULT 0,
+  tax_rate   DOUBLE PRECISION NOT NULL DEFAULT 0,
+  shipping   DOUBLE PRECISION NOT NULL DEFAULT 0,
+  weight     DOUBLE PRECISION NOT NULL DEFAULT 0,
   ship_first_name TEXT NOT NULL DEFAULT '',
   ship_last_name  TEXT NOT NULL DEFAULT '',
   ship_address    TEXT NOT NULL DEFAULT '',
@@ -59,9 +63,9 @@ CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
 
 CREATE TABLE IF NOT EXISTS leads (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  id         INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   email      TEXT NOT NULL,
-  created_at INTEGER NOT NULL
+  created_at BIGINT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS shipping_profiles (
@@ -72,49 +76,79 @@ CREATE TABLE IF NOT EXISTS shipping_profiles (
   city       TEXT NOT NULL,
   phone      TEXT NOT NULL,
   phone2     TEXT NOT NULL DEFAULT '',
-  updated_at INTEGER NOT NULL
+  updated_at BIGINT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
   token      TEXT PRIMARY KEY,
   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  created_at INTEGER NOT NULL,
-  expires_at INTEGER NOT NULL
+  created_at BIGINT NOT NULL,
+  expires_at BIGINT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_reset_tokens_user_id ON password_reset_tokens(user_id);
 
 CREATE TABLE IF NOT EXISTS notifications (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  id         INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   order_id   TEXT REFERENCES orders(id) ON DELETE CASCADE,
   message    TEXT NOT NULL,
-  is_read    INTEGER NOT NULL DEFAULT 0,
-  created_at INTEGER NOT NULL
+  is_read    BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at BIGINT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 `;
 
-function addColumnIfMissing(db, table, columnDdl) {
-  try {
-    db.exec(`ALTER TABLE ${table} ADD COLUMN ${columnDdl}`);
-  } catch (err) {
-    if (!String(err.message).includes('duplicate column')) throw err;
-  }
+let schemaInitialized = false;
+
+// Picks the first candidate that actually looks like a Postgres connection string, skipping
+// unset/empty values and any placeholder text that isn't a real "postgres://" URL.
+export function resolveConnectionString(...candidates) {
+  return candidates.find((c) => typeof c === 'string' && /^postgres(ql)?:\/\//.test(c));
 }
 
-export function openDb(dbPath) {
-  const db = new DatabaseSync(dbPath);
-  db.exec(SCHEMA);
-  // Migrations for databases created before these columns existed.
-  addColumnIfMissing(db, 'users', `avatar TEXT NOT NULL DEFAULT ''`);
-  addColumnIfMissing(db, 'orders', `tax_rate REAL NOT NULL DEFAULT 0`);
-  addColumnIfMissing(db, 'orders', `ship_first_name TEXT NOT NULL DEFAULT ''`);
-  addColumnIfMissing(db, 'orders', `ship_last_name TEXT NOT NULL DEFAULT ''`);
-  addColumnIfMissing(db, 'orders', `ship_address TEXT NOT NULL DEFAULT ''`);
-  addColumnIfMissing(db, 'orders', `ship_city TEXT NOT NULL DEFAULT ''`);
-  addColumnIfMissing(db, 'orders', `ship_phone TEXT NOT NULL DEFAULT ''`);
-  addColumnIfMissing(db, 'orders', `ship_phone2 TEXT NOT NULL DEFAULT ''`);
-  return db;
+export function openDb(connectionString) {
+  // Supabase's pooler presents a cert chain that isn't in Node's default CA bundle. The
+  // connection string's own sslmode=require overrides an explicit ssl option if left in
+  // place, so strip it and rely on the ssl config below instead (still TLS-encrypted,
+  // just not chain-verified against a public CA).
+  const url = new URL(connectionString);
+  url.searchParams.delete('sslmode');
+  // Keep the per-process pool small: Supabase's free-tier pooler has a limited number of
+  // client slots, and each serverless invocation (or, locally, each test file process)
+  // opens its own pool.
+  const pool = new Pool({ connectionString: url.toString(), ssl: { rejectUnauthorized: false }, max: 5 });
+  return pool;
+}
+
+// Arbitrary fixed key for a Postgres advisory lock (server-wide, not just per-process).
+// Node's test runner starts each test file as a separate process, so concurrent cold
+// starts can race on "CREATE TABLE IF NOT EXISTS" and collide on Postgres's internal
+// pg_type catalog; the lock serializes schema creation across all of them.
+//
+// Supabase's connection string points at its transaction-mode pooler, which can hand
+// separate statements on the same client to different backend connections. A session-scoped
+// pg_advisory_lock/unlock pair as two separate statements can therefore acquire on one
+// backend and try to release on another, leaking the lock and hanging every other process
+// behind it until Supabase's statement_timeout kills them. A transaction-scoped
+// pg_advisory_xact_lock inside one explicit BEGIN/COMMIT stays pinned to a single backend
+// for the whole transaction and auto-releases on COMMIT/ROLLBACK, so it's pooler-safe.
+const SCHEMA_LOCK_KEY = 727116;
+
+export async function initSchema(pool) {
+  if (schemaInitialized) return;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('SELECT pg_advisory_xact_lock($1)', [SCHEMA_LOCK_KEY]);
+    await client.query(SCHEMA);
+    await client.query('COMMIT');
+    schemaInitialized = true;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 // Matches the frontend's own generateId() convention: Date.now().toString(36) + 3 random base36 chars, upper-cased.
@@ -123,210 +157,226 @@ function makeOrderId() {
   return (Date.now().toString(36) + rand).toUpperCase();
 }
 
-export function createStatements(db) {
-  const insertUserStmt = db.prepare(
-    `INSERT INTO users (email, full_name, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?)`
-  );
-  const getUserByEmailStmt = db.prepare(`SELECT * FROM users WHERE email = ? COLLATE NOCASE`);
-  const getUserByIdStmt = db.prepare(`SELECT * FROM users WHERE id = ?`);
-
-  const insertSessionStmt = db.prepare(
-    `INSERT INTO sessions (id, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)`
-  );
-  const getSessionStmt = db.prepare(`SELECT * FROM sessions WHERE id = ?`);
-  const touchSessionStmt = db.prepare(`UPDATE sessions SET expires_at = ? WHERE id = ?`);
-  const deleteSessionStmt = db.prepare(`DELETE FROM sessions WHERE id = ?`);
-  const deleteExpiredSessionsStmt = db.prepare(`DELETE FROM sessions WHERE expires_at < ?`);
-
-  const insertOrderStmt = db.prepare(`
-    INSERT INTO orders (id, user_id, status, created_at, link, quantity, size, color, note, image, price, tax, tax_rate, shipping, weight)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-  const getOrdersByUserStmt = db.prepare(`SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC`);
-  const getOrderByIdStmt = db.prepare(`SELECT * FROM orders WHERE id = ?`);
-  const updateOrderStatusStmt = db.prepare(`UPDATE orders SET status = ? WHERE id = ?`);
-  const updateOrderDetailsStmt = db.prepare(
-    `UPDATE orders SET weight = ?, price = ?, tax = ?, tax_rate = ?, shipping = ? WHERE id = ?`
-  );
-  const confirmOrderWithShippingStmt = db.prepare(`
-    UPDATE orders SET status = 'Confirmed',
-      ship_first_name = ?, ship_last_name = ?, ship_address = ?, ship_city = ?, ship_phone = ?, ship_phone2 = ?
-    WHERE id = ?
-  `);
-
-  const insertLeadStmt = db.prepare(`INSERT INTO leads (email, created_at) VALUES (?, ?)`);
-
-  const getShippingProfileStmt = db.prepare(`SELECT * FROM shipping_profiles WHERE user_id = ?`);
-  const upsertShippingProfileStmt = db.prepare(`
-    INSERT INTO shipping_profiles (user_id, first_name, last_name, address, city, phone, phone2, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(user_id) DO UPDATE SET
-      first_name = excluded.first_name, last_name = excluded.last_name, address = excluded.address,
-      city = excluded.city, phone = excluded.phone, phone2 = excluded.phone2, updated_at = excluded.updated_at
-  `);
-
-  const updateUserPasswordStmt = db.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`);
-  const updateUserAvatarStmt = db.prepare(`UPDATE users SET avatar = ? WHERE id = ?`);
-  const deleteSessionsByUserStmt = db.prepare(`DELETE FROM sessions WHERE user_id = ?`);
-  const deleteOtherSessionsStmt = db.prepare(`DELETE FROM sessions WHERE user_id = ? AND id != ?`);
-
-  const insertResetTokenStmt = db.prepare(
-    `INSERT INTO password_reset_tokens (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)`
-  );
-  const getResetTokenStmt = db.prepare(`SELECT * FROM password_reset_tokens WHERE token = ?`);
-  const deleteResetTokenStmt = db.prepare(`DELETE FROM password_reset_tokens WHERE token = ?`);
-  const deleteResetTokensByUserStmt = db.prepare(`DELETE FROM password_reset_tokens WHERE user_id = ?`);
-
-  const insertNotificationStmt = db.prepare(
-    `INSERT INTO notifications (user_id, order_id, message, is_read, created_at) VALUES (?, ?, ?, 0, ?)`
-  );
-  const getNotificationsByUserStmt = db.prepare(
-    `SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50`
-  );
-  const getUnreadNotificationCountStmt = db.prepare(
-    `SELECT COUNT(*) AS c FROM notifications WHERE user_id = ? AND is_read = 0`
-  );
-  const markNotificationReadStmt = db.prepare(
-    `UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?`
-  );
-  const markAllNotificationsReadStmt = db.prepare(
-    `UPDATE notifications SET is_read = 1 WHERE user_id = ?`
-  );
-
-  const getAllUsersStmt = db.prepare(`SELECT id, email, full_name, role, created_at FROM users ORDER BY created_at DESC`);
-  const getAllOrdersWithOwnerStmt = db.prepare(`
-    SELECT orders.*, users.email AS owner_email, users.full_name AS owner_full_name
-    FROM orders JOIN users ON users.id = orders.user_id
-    ORDER BY orders.created_at DESC
-  `);
-
+export function createStatements(pool) {
   return {
-    insertUser({ email, fullName, passwordHash, role = 'user' }) {
-      const info = insertUserStmt.run(email, fullName, passwordHash, role, Date.now());
-      return getUserByIdStmt.get(Number(info.lastInsertRowid));
+    async insertUser({ email, fullName, passwordHash, role = 'user' }) {
+      const { rows } = await pool.query(
+        `INSERT INTO users (email, full_name, password_hash, role, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+        [email, fullName, passwordHash, role, Date.now()]
+      );
+      return rows[0];
     },
-    getUserByEmail(email) {
-      return getUserByEmailStmt.get(email);
+    async getUserByEmail(email) {
+      const { rows } = await pool.query(`SELECT * FROM users WHERE LOWER(email) = LOWER($1)`, [email]);
+      return rows[0] || null;
     },
-    getUserById(id) {
-      return getUserByIdStmt.get(id);
-    },
-
-    insertSession({ id, userId, expiresAt }) {
-      insertSessionStmt.run(id, userId, Date.now(), expiresAt);
-    },
-    getSession(id) {
-      return getSessionStmt.get(id);
-    },
-    touchSession(id, expiresAt) {
-      touchSessionStmt.run(expiresAt, id);
-    },
-    deleteSession(id) {
-      deleteSessionStmt.run(id);
-    },
-    deleteExpiredSessions() {
-      deleteExpiredSessionsStmt.run(Date.now());
+    async getUserById(id) {
+      const { rows } = await pool.query(`SELECT * FROM users WHERE id = $1`, [id]);
+      return rows[0] || null;
     },
 
-    insertOrder({ userId, status = 'Pending', link, quantity, size = '', color = '', note = '', image = '' }) {
+    async insertSession({ id, userId, expiresAt }) {
+      await pool.query(
+        `INSERT INTO sessions (id, user_id, created_at, expires_at) VALUES ($1, $2, $3, $4)`,
+        [id, userId, Date.now(), expiresAt]
+      );
+    },
+    async getSession(id) {
+      const { rows } = await pool.query(`SELECT * FROM sessions WHERE id = $1`, [id]);
+      return rows[0] || null;
+    },
+    async touchSession(id, expiresAt) {
+      await pool.query(`UPDATE sessions SET expires_at = $1 WHERE id = $2`, [expiresAt, id]);
+    },
+    async deleteSession(id) {
+      await pool.query(`DELETE FROM sessions WHERE id = $1`, [id]);
+    },
+    async deleteExpiredSessions() {
+      await pool.query(`DELETE FROM sessions WHERE expires_at < $1`, [Date.now()]);
+    },
+
+    async insertOrder({ userId, status = 'Pending', link, quantity, size = '', color = '', note = '', image = '' }) {
       const now = Date.now();
       for (let attempt = 0; attempt < 5; attempt++) {
         const id = makeOrderId();
         try {
-          insertOrderStmt.run(id, userId, status, now, link, quantity, size, color, note, image, 0, 0, 0, 0, 0);
-          return getOrderByIdStmt.get(id);
+          const { rows } = await pool.query(
+            `INSERT INTO orders (id, user_id, status, created_at, link, quantity, size, color, note, image, price, tax, tax_rate, shipping, weight)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 0, 0, 0, 0, 0) RETURNING *`,
+            [id, userId, status, now, link, quantity, size, color, note, image]
+          );
+          return rows[0];
         } catch (err) {
-          if (String(err.message).includes('UNIQUE constraint failed') && attempt < 4) continue;
+          if (err.code === '23505' && attempt < 4) continue;
           throw err;
         }
       }
       throw new Error('Failed to generate a unique order id');
     },
-    getOrdersByUser(userId) {
-      return getOrdersByUserStmt.all(userId);
+    async getOrdersByUser(userId) {
+      const { rows } = await pool.query(`SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC`, [userId]);
+      return rows;
     },
-    confirmOrderWithShipping(id, { firstName, lastName, address, city, phone, phone2 }) {
-      confirmOrderWithShippingStmt.run(firstName, lastName, address, city, phone, phone2, id);
-      return getOrderByIdStmt.get(id);
+    async getOrderById(id) {
+      const { rows } = await pool.query(`SELECT * FROM orders WHERE id = $1`, [id]);
+      return rows[0] || null;
     },
-    getShippingProfile(userId) {
-      return getShippingProfileStmt.get(userId);
-    },
-    upsertShippingProfile(userId, { firstName, lastName, address, city, phone, phone2 }) {
-      upsertShippingProfileStmt.run(userId, firstName, lastName, address, city, phone, phone2, Date.now());
-      return getShippingProfileStmt.get(userId);
-    },
-    getOrderById(id) {
-      return getOrderByIdStmt.get(id);
-    },
-    updateOrderStatus(id, status) {
-      updateOrderStatusStmt.run(status, id);
-      return getOrderByIdStmt.get(id);
+    async updateOrderStatus(id, status) {
+      const { rows } = await pool.query(`UPDATE orders SET status = $1 WHERE id = $2 RETURNING *`, [status, id]);
+      return rows[0];
     },
     // weight/price/shipping are absolute values; taxRate is a PERCENTAGE (e.g. 5 = 5%).
     // tax is always re-derived here as price * quantity * taxRate / 100, so it self-corrects
     // whenever price or taxRate changes later, instead of drifting out of sync.
-    updateOrderDetails(id, { weight, price, taxRate, shipping }) {
-      const existing = getOrderByIdStmt.get(id);
-      const effectivePrice = price;
-      const effectiveTaxRate = taxRate;
-      const tax = effectivePrice * existing.quantity * (effectiveTaxRate / 100);
-      updateOrderDetailsStmt.run(weight, effectivePrice, tax, effectiveTaxRate, shipping, id);
-      return getOrderByIdStmt.get(id);
+    async updateOrderDetails(id, { weight, price, taxRate, shipping }) {
+      const existing = await this.getOrderById(id);
+      const tax = price * existing.quantity * (taxRate / 100);
+      const { rows } = await pool.query(
+        `UPDATE orders SET weight = $1, price = $2, tax = $3, tax_rate = $4, shipping = $5 WHERE id = $6 RETURNING *`,
+        [weight, price, tax, taxRate, shipping, id]
+      );
+      return rows[0];
+    },
+    // Atomic: upserts the shipping profile and confirms the order together, so a crash
+    // mid-flow can never leave the profile updated but the order still unconfirmed.
+    async confirmOrderWithShipping(id, userId, { firstName, lastName, address, city, phone, phone2 }) {
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        await client.query(
+          `INSERT INTO shipping_profiles (user_id, first_name, last_name, address, city, phone, phone2, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+           ON CONFLICT (user_id) DO UPDATE SET
+             first_name = excluded.first_name, last_name = excluded.last_name, address = excluded.address,
+             city = excluded.city, phone = excluded.phone, phone2 = excluded.phone2, updated_at = excluded.updated_at`,
+          [userId, firstName, lastName, address, city, phone, phone2, Date.now()]
+        );
+        const { rows } = await client.query(
+          `UPDATE orders SET status = 'Confirmed',
+             ship_first_name = $1, ship_last_name = $2, ship_address = $3, ship_city = $4, ship_phone = $5, ship_phone2 = $6
+           WHERE id = $7 RETURNING *`,
+          [firstName, lastName, address, city, phone, phone2, id]
+        );
+        await client.query('COMMIT');
+        return rows[0];
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+      } finally {
+        client.release();
+      }
+    },
+    async getShippingProfile(userId) {
+      const { rows } = await pool.query(`SELECT * FROM shipping_profiles WHERE user_id = $1`, [userId]);
+      return rows[0] || null;
+    },
+    async upsertShippingProfile(userId, { firstName, lastName, address, city, phone, phone2 }) {
+      const { rows } = await pool.query(
+        `INSERT INTO shipping_profiles (user_id, first_name, last_name, address, city, phone, phone2, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         ON CONFLICT (user_id) DO UPDATE SET
+           first_name = excluded.first_name, last_name = excluded.last_name, address = excluded.address,
+           city = excluded.city, phone = excluded.phone, phone2 = excluded.phone2, updated_at = excluded.updated_at
+         RETURNING *`,
+        [userId, firstName, lastName, address, city, phone, phone2, Date.now()]
+      );
+      return rows[0];
     },
 
-    insertLead({ email }) {
-      insertLeadStmt.run(email, Date.now());
+    async insertLead({ email }) {
+      await pool.query(`INSERT INTO leads (email, created_at) VALUES ($1, $2)`, [email, Date.now()]);
     },
 
-    updateUserPassword(userId, passwordHash) {
-      updateUserPasswordStmt.run(passwordHash, userId);
+    async updateUserPassword(userId, passwordHash) {
+      await pool.query(`UPDATE users SET password_hash = $1 WHERE id = $2`, [passwordHash, userId]);
     },
-    updateUserAvatar(userId, avatarPath) {
-      updateUserAvatarStmt.run(avatarPath, userId);
-      return getUserByIdStmt.get(userId);
+    async updateUserAvatar(userId, avatarPath) {
+      const { rows } = await pool.query(`UPDATE users SET avatar = $1 WHERE id = $2 RETURNING *`, [avatarPath, userId]);
+      return rows[0];
     },
-    deleteSessionsByUser(userId) {
-      deleteSessionsByUserStmt.run(userId);
+    async deleteSessionsByUser(userId) {
+      await pool.query(`DELETE FROM sessions WHERE user_id = $1`, [userId]);
     },
-    deleteOtherSessions(userId, keepSessionId) {
-      deleteOtherSessionsStmt.run(userId, keepSessionId);
-    },
-
-    insertNotification({ userId, orderId = null, message }) {
-      insertNotificationStmt.run(userId, orderId, message, Date.now());
-    },
-    getNotificationsByUser(userId) {
-      return getNotificationsByUserStmt.all(userId);
-    },
-    getUnreadNotificationCount(userId) {
-      return getUnreadNotificationCountStmt.get(userId).c;
-    },
-    markNotificationRead(id, userId) {
-      markNotificationReadStmt.run(id, userId);
-    },
-    markAllNotificationsRead(userId) {
-      markAllNotificationsReadStmt.run(userId);
+    async deleteOtherSessions(userId, keepSessionId) {
+      await pool.query(`DELETE FROM sessions WHERE user_id = $1 AND id != $2`, [userId, keepSessionId]);
     },
 
-    insertResetToken({ token, userId, expiresAt }) {
-      insertResetTokenStmt.run(token, userId, Date.now(), expiresAt);
-    },
-    getResetToken(token) {
-      return getResetTokenStmt.get(token);
-    },
-    deleteResetToken(token) {
-      deleteResetTokenStmt.run(token);
-    },
-    deleteResetTokensByUser(userId) {
-      deleteResetTokensByUserStmt.run(userId);
+    // Fires status-change + notification together so they can never desync under a network DB.
+    async updateOrderStatusWithNotification(id, status, message) {
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        const { rows } = await client.query(`UPDATE orders SET status = $1 WHERE id = $2 RETURNING *`, [status, id]);
+        const order = rows[0];
+        await client.query(
+          `INSERT INTO notifications (user_id, order_id, message, is_read, created_at) VALUES ($1, $2, $3, FALSE, $4)`,
+          [order.user_id, order.id, message, Date.now()]
+        );
+        await client.query('COMMIT');
+        return order;
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+      } finally {
+        client.release();
+      }
     },
 
-    getAllUsers() {
-      return getAllUsersStmt.all();
+    async insertNotification({ userId, orderId = null, message }) {
+      await pool.query(
+        `INSERT INTO notifications (user_id, order_id, message, is_read, created_at) VALUES ($1, $2, $3, FALSE, $4)`,
+        [userId, orderId, message, Date.now()]
+      );
     },
-    getAllOrdersWithOwner() {
-      return getAllOrdersWithOwnerStmt.all();
+    async getNotificationsByUser(userId) {
+      const { rows } = await pool.query(
+        `SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50`,
+        [userId]
+      );
+      return rows;
+    },
+    async getUnreadNotificationCount(userId) {
+      const { rows } = await pool.query(
+        `SELECT COUNT(*)::int AS c FROM notifications WHERE user_id = $1 AND is_read = FALSE`,
+        [userId]
+      );
+      return rows[0].c;
+    },
+    async markNotificationRead(id, userId) {
+      await pool.query(`UPDATE notifications SET is_read = TRUE WHERE id = $1 AND user_id = $2`, [id, userId]);
+    },
+    async markAllNotificationsRead(userId) {
+      await pool.query(`UPDATE notifications SET is_read = TRUE WHERE user_id = $1`, [userId]);
+    },
+
+    async insertResetToken({ token, userId, expiresAt }) {
+      await pool.query(
+        `INSERT INTO password_reset_tokens (token, user_id, created_at, expires_at) VALUES ($1, $2, $3, $4)`,
+        [token, userId, Date.now(), expiresAt]
+      );
+    },
+    async getResetToken(token) {
+      const { rows } = await pool.query(`SELECT * FROM password_reset_tokens WHERE token = $1`, [token]);
+      return rows[0] || null;
+    },
+    async deleteResetToken(token) {
+      await pool.query(`DELETE FROM password_reset_tokens WHERE token = $1`, [token]);
+    },
+    async deleteResetTokensByUser(userId) {
+      await pool.query(`DELETE FROM password_reset_tokens WHERE user_id = $1`, [userId]);
+    },
+
+    async getAllUsers() {
+      const { rows } = await pool.query(`SELECT id, email, full_name, role, created_at FROM users ORDER BY created_at DESC`);
+      return rows;
+    },
+    async getAllOrdersWithOwner() {
+      const { rows } = await pool.query(`
+        SELECT orders.*, users.email AS owner_email, users.full_name AS owner_full_name
+        FROM orders JOIN users ON users.id = orders.user_id
+        ORDER BY orders.created_at DESC
+      `);
+      return rows;
     }
   };
 }

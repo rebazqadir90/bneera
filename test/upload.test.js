@@ -44,7 +44,7 @@ test('upload: valid PNG upload is accepted and image URL is returned', async () 
   const res = await jar.fetch('/api/orders', { method: 'POST', body: form });
   assert.equal(res.status, 201);
   const order = (await res.json()).order;
-  assert.match(order.image, /^\/uploads\/.+\.png$/);
+  assert.match(order.image, /^https:\/\/.+\/orders\/.+\.png$/);
 });
 
 test('upload: uploaded image is actually retrievable and byte-identical via its URL', async () => {
@@ -61,7 +61,7 @@ test('upload: uploaded image is actually retrievable and byte-identical via its 
   assert.equal(bytes.length, FIXTURE_PNG.length);
 });
 
-test('upload: /uploads path requires authentication', async () => {
+test('upload: image URL is public but unguessable (random path component)', async () => {
   const jar = await newLoggedInUser('uploadauth');
   const form = new FormData();
   form.append('link', 'https://example.com/p');
@@ -69,9 +69,12 @@ test('upload: /uploads path requires authentication', async () => {
   const createRes = await jar.fetch('/api/orders', { method: 'POST', body: form });
   const order = (await createRes.json()).order;
 
+  // Blob storage has no per-file auth (unlike the old /uploads route): anyone with the
+  // exact URL can fetch it. Guard against that URL being guessable instead.
   const anonJar = createCookieJar(server.baseUrl);
   const res = await anonJar.fetch(order.image);
-  assert.equal(res.status, 401);
+  assert.equal(res.status, 200);
+  assert.match(order.image, /\/orders\/\d+-[0-9a-f]{12}\.png$/);
 });
 
 test('upload: rejects an oversized file (>8MB) with 400', async () => {

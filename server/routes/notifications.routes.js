@@ -14,20 +14,26 @@ export function createNotificationsRoutes({ stmts, auth }) {
   const router = Router();
   const { requireAuth } = auth;
 
-  router.get('/notifications', requireAuth, (req, res) => {
-    const notifications = stmts.getNotificationsByUser(req.user.id).map(toPublicNotification);
-    const unreadCount = stmts.getUnreadNotificationCount(req.user.id);
-    res.status(200).json({ notifications, unreadCount });
+  router.get('/notifications', requireAuth, async (req, res, next) => {
+    try {
+      const notifications = (await stmts.getNotificationsByUser(req.user.id)).map(toPublicNotification);
+      const unreadCount = await stmts.getUnreadNotificationCount(req.user.id);
+      res.status(200).json({ notifications, unreadCount });
+    } catch (err) { next(err); }
   });
 
-  router.post('/notifications/:id/read', requireAuth, (req, res) => {
-    stmts.markNotificationRead(req.params.id, req.user.id);
-    res.status(200).json({ ok: true });
+  router.post('/notifications/:id/read', requireAuth, async (req, res, next) => {
+    try {
+      await stmts.markNotificationRead(req.params.id, req.user.id);
+      res.status(200).json({ ok: true });
+    } catch (err) { next(err); }
   });
 
-  router.post('/notifications/read-all', requireAuth, (req, res) => {
-    stmts.markAllNotificationsRead(req.user.id);
-    res.status(200).json({ ok: true });
+  router.post('/notifications/read-all', requireAuth, async (req, res, next) => {
+    try {
+      await stmts.markAllNotificationsRead(req.user.id);
+      res.status(200).json({ ok: true });
+    } catch (err) { next(err); }
   });
 
   return router;

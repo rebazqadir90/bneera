@@ -4,6 +4,7 @@ import {
   SESSION_COOKIE, SESSION_TTL_MS, RESET_TOKEN_TTL_MS,
   generateSessionId, generateResetToken, serializeCookie, clearCookie
 } from '../lib/sessions.js';
+import { uploadToBlob } from '../lib/upload.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -26,10 +27,10 @@ function toPublicShippingProfile(profile) {
 export function createAuthRoutes({ stmts, auth, upload, adminEmails, isProduction }) {
   const router = Router();
 
-  function setSessionCookie(res, userId) {
+  async function setSessionCookie(res, userId) {
     const sid = generateSessionId();
     const expiresAt = Date.now() + SESSION_TTL_MS;
-    stmts.insertSession({ id: sid, userId, expiresAt });
+    await stmts.insertSession({ id: sid, userId, expiresAt });
     res.setHeader('Set-Cookie', serializeCookie(SESSION_COOKIE, sid, {
       maxAgeMs: SESSION_TTL_MS,
       secure: isProduction
@@ -56,15 +57,15 @@ export function createAuthRoutes({ stmts, auth, upload, adminEmails, isProductio
         return res.status(400).json({ error: { message: 'Invalid signup details', fields } });
       }
 
-      if (stmts.getUserByEmail(email)) {
+      if (await stmts.getUserByEmail(email)) {
         return res.status(409).json({ error: { message: 'Email already registered', fields: { email: 'Email already registered' } } });
       }
 
       const passwordHash = await hashPassword(password);
       const role = adminEmails.includes(email.toLowerCase()) ? 'admin' : 'user';
-      const user = stmts.insertUser({ email, fullName, passwordHash, role });
+      const user = await stmts.insertUser({ email, fullName, passwordHash, role });
 
-      setSessionCookie(res, user.id);
+      await setSessionCookie(res, user.id);
       res.status(201).json({ user: toPublicUser(user) });
     } catch (err) {
       next(err);
@@ -81,25 +82,27 @@ export function createAuthRoutes({ stmts, auth, upload, adminEmails, isProductio
 
       if (!email || !password) return genericError();
 
-      const user = stmts.getUserByEmail(email);
+      const user = await stmts.getUserByEmail(email);
       if (!user) return genericError();
 
       const ok = await verifyPassword(password, user.password_hash);
       if (!ok) return genericError();
 
-      setSessionCookie(res, user.id);
+      await setSessionCookie(res, user.id);
       res.status(200).json({ user: toPublicUser(user) });
     } catch (err) {
       next(err);
     }
   });
 
-  router.post('/logout', (req, res) => {
-    if (req.sessionId) {
-      stmts.deleteSession(req.sessionId);
-    }
-    res.setHeader('Set-Cookie', clearCookie(SESSION_COOKIE, { secure: isProduction }));
-    res.status(204).end();
+  router.post('/logout', async (req, res, next) => {
+    try {
+      if (req.sessionId) {
+        await stmts.deleteSession(req.sessionId);
+      }
+      res.setHeader('Set-Cookie', clearCookie(SESSION_COOKIE, { secure: isProduction }));
+      res.status(204).end();
+    } catch (err) { next(err); }
   });
 
   router.post('/forgot-password', async (req, res, next) => {
@@ -115,14 +118,14 @@ export function createAuthRoutes({ stmts, auth, upload, adminEmails, isProductio
         return res.status(200).json(genericResponse);
       }
 
-      const user = stmts.getUserByEmail(email);
+      const user = await stmts.getUserByEmail(email);
       if (!user) {
         return res.status(200).json(genericResponse);
       }
 
-      stmts.deleteResetTokensByUser(user.id); // invalidate any earlier outstanding token
+      await stmts.deleteResetTokensByUser(user.id); // invalidate any earlier outstanding token
       const token = generateResetToken();
-      stmts.insertResetToken({ token, userId: user.id, expiresAt: Date.now() + RESET_TOKEN_TTL_MS });
+      await stmts.insertResetToken({ token, userId: user.id, expiresAt: Date.now() + RESET_TOKEN_TTL_MS });
 
       const resetUrl = `${req.protocol}://${req.get('host')}/reset-password.html?token=${token}`;
       // No email provider is configured yet, so the link is logged server-side for now.
@@ -153,19 +156,19 @@ export function createAuthRoutes({ stmts, auth, upload, adminEmails, isProductio
         return res.status(400).json({ error: { message: 'Invalid password details', fields } });
       }
 
-      const record = token ? stmts.getResetToken(token) : null;
+      const record = token ? await stmts.getResetToken(token) : null;
       if (!record) {
         return res.status(400).json({ error: { message: 'This reset link is invalid. Request a new one.' } });
       }
       if (record.expires_at < Date.now()) {
-        stmts.deleteResetToken(token);
+        await stmts.deleteResetToken(token);
         return res.status(400).json({ error: { message: 'This reset link has expired. Request a new one.' } });
       }
 
       const passwordHash = await hashPassword(password);
-      stmts.updateUserPassword(record.user_id, passwordHash);
-      stmts.deleteResetToken(token);
-      stmts.deleteSessionsByUser(record.user_id); // sign the account out everywhere for security
+      await stmts.updateUserPassword(record.user_id, passwordHash);
+      await stmts.deleteResetToken(token);
+      await stmts.deleteSessionsByUser(record.user_id); // sign the account out everywhere for security
 
       res.status(200).json({ ok: true });
     } catch (err) {
@@ -177,37 +180,41 @@ export function createAuthRoutes({ stmts, auth, upload, adminEmails, isProductio
     res.status(200).json({ user: req.user ? toPublicUser(req.user) : null });
   });
 
-  router.get('/me/shipping', auth.requireAuth, (req, res) => {
-    const profile = stmts.getShippingProfile(req.user.id);
-    res.status(200).json({ shipping: toPublicShippingProfile(profile) });
+  router.get('/me/shipping', auth.requireAuth, async (req, res, next) => {
+    try {
+      const profile = await stmts.getShippingProfile(req.user.id);
+      res.status(200).json({ shipping: toPublicShippingProfile(profile) });
+    } catch (err) { next(err); }
   });
 
-  router.patch('/me/shipping', auth.requireAuth, (req, res) => {
-    const body = req.body || {};
-    function trimmed(key) { return typeof body[key] === 'string' ? body[key].trim() : ''; }
-    const shipping = {
-      firstName: trimmed('firstName'),
-      lastName: trimmed('lastName'),
-      address: trimmed('address'),
-      city: trimmed('city'),
-      phone: trimmed('phone'),
-      phone2: trimmed('phone2')
-    };
+  router.patch('/me/shipping', auth.requireAuth, async (req, res, next) => {
+    try {
+      const body = req.body || {};
+      function trimmed(key) { return typeof body[key] === 'string' ? body[key].trim() : ''; }
+      const shipping = {
+        firstName: trimmed('firstName'),
+        lastName: trimmed('lastName'),
+        address: trimmed('address'),
+        city: trimmed('city'),
+        phone: trimmed('phone'),
+        phone2: trimmed('phone2')
+      };
 
-    const fields = {};
-    if (!shipping.firstName || shipping.firstName.length > 100) fields.firstName = 'First name is required';
-    if (!shipping.lastName || shipping.lastName.length > 100) fields.lastName = 'Last name is required';
-    if (!shipping.address || shipping.address.length > 500) fields.address = 'Full address is required';
-    if (!shipping.city || shipping.city.length > 100) fields.city = 'City is required';
-    if (!shipping.phone || shipping.phone.length > 40) fields.phone = 'Phone number is required';
-    if (shipping.phone2 && shipping.phone2.length > 40) fields.phone2 = 'Second phone number is too long';
+      const fields = {};
+      if (!shipping.firstName || shipping.firstName.length > 100) fields.firstName = 'First name is required';
+      if (!shipping.lastName || shipping.lastName.length > 100) fields.lastName = 'Last name is required';
+      if (!shipping.address || shipping.address.length > 500) fields.address = 'Full address is required';
+      if (!shipping.city || shipping.city.length > 100) fields.city = 'City is required';
+      if (!shipping.phone || shipping.phone.length > 40) fields.phone = 'Phone number is required';
+      if (shipping.phone2 && shipping.phone2.length > 40) fields.phone2 = 'Second phone number is too long';
 
-    if (Object.keys(fields).length > 0) {
-      return res.status(400).json({ error: { message: 'Invalid shipping details', fields } });
-    }
+      if (Object.keys(fields).length > 0) {
+        return res.status(400).json({ error: { message: 'Invalid shipping details', fields } });
+      }
 
-    const profile = stmts.upsertShippingProfile(req.user.id, shipping);
-    res.status(200).json({ shipping: toPublicShippingProfile(profile) });
+      const profile = await stmts.upsertShippingProfile(req.user.id, shipping);
+      res.status(200).json({ shipping: toPublicShippingProfile(profile) });
+    } catch (err) { next(err); }
   });
 
   router.post('/me/change-password', auth.requireAuth, async (req, res, next) => {
@@ -231,8 +238,8 @@ export function createAuthRoutes({ stmts, auth, upload, adminEmails, isProductio
       }
 
       const passwordHash = await hashPassword(newPassword);
-      stmts.updateUserPassword(req.user.id, passwordHash);
-      stmts.deleteOtherSessions(req.user.id, req.sessionId); // sign out everywhere else, keep this session active
+      await stmts.updateUserPassword(req.user.id, passwordHash);
+      await stmts.deleteOtherSessions(req.user.id, req.sessionId); // sign out everywhere else, keep this session active
 
       res.status(200).json({ ok: true });
     } catch (err) {
@@ -241,14 +248,16 @@ export function createAuthRoutes({ stmts, auth, upload, adminEmails, isProductio
   });
 
   router.post('/me/avatar', auth.requireAuth, (req, res, next) => {
-    upload.single('avatar')(req, res, (err) => {
+    upload.single('avatar')(req, res, async (err) => {
       if (err) return next(err);
-      if (!req.file) {
-        return res.status(400).json({ error: { message: 'An image file is required', fields: { avatar: 'An image file is required' } } });
-      }
-      const avatarPath = `/uploads/${req.file.filename}`;
-      const user = stmts.updateUserAvatar(req.user.id, avatarPath);
-      res.status(200).json({ user: toPublicUser(user) });
+      try {
+        if (!req.file) {
+          return res.status(400).json({ error: { message: 'An image file is required', fields: { avatar: 'An image file is required' } } });
+        }
+        const avatarUrl = await uploadToBlob(req.file, 'avatars');
+        const user = await stmts.updateUserAvatar(req.user.id, avatarUrl);
+        res.status(200).json({ user: toPublicUser(user) });
+      } catch (err2) { next(err2); }
     });
   });
 
