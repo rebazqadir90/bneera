@@ -34,5 +34,12 @@ export function createAdminRoutes({ stmts, auth }) {
     } catch (err) { next(err); }
   });
 
+  router.get('/admin/marketplaces', requireAdmin, async (req, res, next) => {
+    try {
+      const marketplaces = await stmts.getMarketplaceBreakdown();
+      res.status(200).json({ marketplaces });
+    } catch (err) { next(err); }
+  });
+
   return router;
 }

@@ -399,6 +399,22 @@ export function createStatements(pool) {
         ordersLast7Days: last7.rows[0].c,
         ordersLast30Days: last30.rows[0].c
       };
+    },
+    async getMarketplaceBreakdown() {
+      const { rows } = await pool.query('SELECT link, price, quantity, tax, shipping, status FROM orders');
+      const byDomain = {};
+      for (const o of rows) {
+        // Every order's link is validated as a real URL at creation time (orders.routes.js),
+        // but the try/catch stays as a defensive fallback for any that somehow aren't.
+        let domain = 'Unknown';
+        try { domain = new URL(o.link).hostname.replace(/^www\./, ''); } catch { /* leave as Unknown */ }
+        if (!byDomain[domain]) byDomain[domain] = { domain, orderCount: 0, revenue: 0 };
+        byDomain[domain].orderCount += 1;
+        if (o.status !== 'Canceled') {
+          byDomain[domain].revenue += Number(o.price) * Number(o.quantity) + Number(o.tax) + Number(o.shipping);
+        }
+      }
+      return Object.values(byDomain).sort((a, b) => b.orderCount - a.orderCount);
     }
   };
 }

@@ -131,7 +131,7 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
 .status-breakdown-row{display:flex;align-items:center;gap:12px;}
 .status-breakdown-label{width:130px;flex:none;font-size:13.5px;color:var(--ink-soft);}
 .status-breakdown-bar-track{flex:1;height:8px;border-radius:4px;background:var(--bg-alt);overflow:hidden;}
-.status-breakdown-bar-fill{height:100%;background:var(--accent);border-radius:4px;}
+.status-breakdown-bar-fill{display:block;height:100%;background:var(--accent);border-radius:4px;}
 .status-breakdown-count{width:36px;flex:none;text-align:right;font-family:var(--font-mono);font-size:13px;color:var(--ink-faint);}
 
 /* order detail/edit modal */
@@ -202,6 +202,7 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
       <button type="button" class="admin-tab active" id="tab-btn-dashboard" data-tab="dashboard">Dashboard</button>
       <button type="button" class="admin-tab" id="tab-btn-accounts" data-tab="accounts">Accounts</button>
       <button type="button" class="admin-tab" id="tab-btn-orders" data-tab="orders">Orders</button>
+      <button type="button" class="admin-tab" id="tab-btn-marketplaces" data-tab="marketplaces">Marketplaces</button>
     </div>
 
     <div class="admin-tab-panel active" id="tab-panel-dashboard">
@@ -265,6 +266,20 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
         </table>
         </div>
         <p class="empty-state" id="orders-empty" hidden>No orders match.</p>
+      </div>
+    </div>
+
+    <div class="admin-tab-panel" id="tab-panel-marketplaces">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Orders by Marketplace</h2>
+          <span class="panel-count mono" id="marketplaces-count">0 marketplaces</span>
+        </div>
+        <table>
+          <thead><tr><th>Marketplace</th><th>Orders</th><th>Share</th><th>Revenue</th></tr></thead>
+          <tbody id="marketplaces-body"></tbody>
+        </table>
+        <p class="empty-state" id="marketplaces-empty" hidden>No orders yet.</p>
       </div>
     </div>
   </div>
@@ -536,6 +551,30 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
     }).join('');
   }
 
+  function renderMarketplaces(marketplaces){
+    document.getElementById('marketplaces-count').textContent = marketplaces.length + (marketplaces.length === 1 ? ' marketplace' : ' marketplaces');
+    var body = document.getElementById('marketplaces-body');
+    var empty = document.getElementById('marketplaces-empty');
+    if(marketplaces.length === 0){
+      body.innerHTML = '';
+      empty.hidden = false;
+      return;
+    }
+    empty.hidden = true;
+    var totalOrders = marketplaces.reduce(function(sum, m){ return sum + m.orderCount; }, 0) || 1;
+    var maxCount = Math.max.apply(null, marketplaces.map(function(m){ return m.orderCount; }).concat([1]));
+    body.innerHTML = marketplaces.map(function(m){
+      var pct = Math.round((m.orderCount / maxCount) * 100);
+      var share = Math.round((m.orderCount / totalOrders) * 100);
+      return '<tr>' +
+        '<td>' + escapeHtml(m.domain) + '</td>' +
+        '<td class="mono">' + m.orderCount + '</td>' +
+        '<td><span class="status-breakdown-bar-track" style="display:inline-flex;width:120px;vertical-align:middle;"><span class="status-breakdown-bar-fill" style="width:' + pct + '%;"></span></span> <span class="mono" style="font-size:12px;color:var(--ink-faint);">' + share + '%</span></td>' +
+        '<td class="mono">$' + m.revenue.toFixed(2) + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
   var allUsers = [];
   var allOrders = [];
 
@@ -570,13 +609,15 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
     Promise.all([
       fetch('/api/admin/users', { credentials: 'same-origin' }).then(function(r){ return r.json(); }),
       fetch('/api/admin/orders', { credentials: 'same-origin' }).then(function(r){ return r.json(); }),
-      fetch('/api/admin/stats', { credentials: 'same-origin' }).then(function(r){ return r.json(); })
+      fetch('/api/admin/stats', { credentials: 'same-origin' }).then(function(r){ return r.json(); }),
+      fetch('/api/admin/marketplaces', { credentials: 'same-origin' }).then(function(r){ return r.json(); })
     ]).then(function(results){
       allUsers = results[0].users || [];
       allOrders = results[1].orders || [];
       applyUsersFilter();
       applyOrdersFilter();
       if(results[2].stats){ renderStats(results[2].stats); }
+      renderMarketplaces(results[3].marketplaces || []);
     });
   }
 
