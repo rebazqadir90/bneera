@@ -123,10 +123,11 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
 .admin-tab-panel{display:none;}
 .admin-tab-panel.active{display:block;}
 
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:28px;}
-.stat-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;}
-.stat-card .stat-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;}
-.stat-card .stat-value{font-family:var(--font-display);font-size:32px;font-weight:800;line-height:1;}
+.stat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:28px;box-shadow:var(--shadow);}
+.stat-card{background:var(--card);padding:20px 18px;}
+.stat-card .stat-label{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:10px;}
+.stat-card .stat-value{font-family:var(--font-display);font-size:clamp(24px,3vw,32px);font-weight:800;line-height:1;}
+@media (max-width:760px){ .stat-grid{grid-template-columns:repeat(2,1fr);} .stat-card:nth-child(5){grid-column:1 / -1;} }
 .status-breakdown{display:flex;flex-direction:column;gap:10px;}
 .status-breakdown-row{display:flex;align-items:center;gap:12px;}
 .status-breakdown-label{width:130px;flex:none;font-size:13.5px;color:var(--ink-soft);}
@@ -202,20 +203,26 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
       <button type="button" class="admin-tab active" id="tab-btn-dashboard" data-tab="dashboard">Dashboard</button>
       <button type="button" class="admin-tab" id="tab-btn-accounts" data-tab="accounts">Accounts</button>
       <button type="button" class="admin-tab" id="tab-btn-orders" data-tab="orders">Orders</button>
-      <button type="button" class="admin-tab" id="tab-btn-marketplaces" data-tab="marketplaces">Marketplaces</button>
     </div>
 
     <div class="admin-tab-panel active" id="tab-panel-dashboard">
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-label">Total accounts</div><div class="stat-value" id="stat-accounts">0</div></div>
-        <div class="stat-card"><div class="stat-label">Total orders</div><div class="stat-value" id="stat-orders">0</div></div>
-        <div class="stat-card"><div class="stat-label">Total revenue</div><div class="stat-value" id="stat-revenue">$0</div></div>
-        <div class="stat-card"><div class="stat-label">Orders (7 days)</div><div class="stat-value" id="stat-last7">0</div></div>
-        <div class="stat-card"><div class="stat-label">Orders (30 days)</div><div class="stat-value" id="stat-last30">0</div></div>
+        <div class="stat-card"><div class="stat-label">Total accounts</div><div class="stat-value mono" id="stat-accounts">0</div></div>
+        <div class="stat-card"><div class="stat-label">Total orders</div><div class="stat-value mono" id="stat-orders">0</div></div>
+        <div class="stat-card"><div class="stat-label">Total revenue</div><div class="stat-value mono" id="stat-revenue">$0</div></div>
+        <div class="stat-card"><div class="stat-label">Orders (7 days)</div><div class="stat-value mono" id="stat-last7">0</div></div>
+        <div class="stat-card"><div class="stat-label">Orders (30 days)</div><div class="stat-value mono" id="stat-last30">0</div></div>
       </div>
       <div class="panel">
         <div class="panel-head"><h2>Orders by Status</h2></div>
         <div class="status-breakdown" id="status-breakdown"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Orders by Marketplace</h2>
+          <span class="panel-count mono" id="marketplaces-count">0 marketplaces</span>
+        </div>
+        <div class="status-breakdown" id="marketplaces-breakdown"></div>
       </div>
     </div>
 
@@ -266,20 +273,6 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
         </table>
         </div>
         <p class="empty-state" id="orders-empty" hidden>No orders match.</p>
-      </div>
-    </div>
-
-    <div class="admin-tab-panel" id="tab-panel-marketplaces">
-      <div class="panel">
-        <div class="panel-head">
-          <h2>Orders by Marketplace</h2>
-          <span class="panel-count mono" id="marketplaces-count">0 marketplaces</span>
-        </div>
-        <table>
-          <thead><tr><th>Marketplace</th><th>Orders</th><th>Share</th><th>Revenue</th></tr></thead>
-          <tbody id="marketplaces-body"></tbody>
-        </table>
-        <p class="empty-state" id="marketplaces-empty" hidden>No orders yet.</p>
       </div>
     </div>
   </div>
@@ -553,25 +546,19 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
 
   function renderMarketplaces(marketplaces){
     document.getElementById('marketplaces-count').textContent = marketplaces.length + (marketplaces.length === 1 ? ' marketplace' : ' marketplaces');
-    var body = document.getElementById('marketplaces-body');
-    var empty = document.getElementById('marketplaces-empty');
+    var container = document.getElementById('marketplaces-breakdown');
     if(marketplaces.length === 0){
-      body.innerHTML = '';
-      empty.hidden = false;
+      container.innerHTML = '<p class="empty-state">No orders yet.</p>';
       return;
     }
-    empty.hidden = true;
-    var totalOrders = marketplaces.reduce(function(sum, m){ return sum + m.orderCount; }, 0) || 1;
     var maxCount = Math.max.apply(null, marketplaces.map(function(m){ return m.orderCount; }).concat([1]));
-    body.innerHTML = marketplaces.map(function(m){
+    container.innerHTML = marketplaces.map(function(m){
       var pct = Math.round((m.orderCount / maxCount) * 100);
-      var share = Math.round((m.orderCount / totalOrders) * 100);
-      return '<tr>' +
-        '<td>' + escapeHtml(m.domain) + '</td>' +
-        '<td class="mono">' + m.orderCount + '</td>' +
-        '<td><span class="status-breakdown-bar-track" style="display:inline-flex;width:120px;vertical-align:middle;"><span class="status-breakdown-bar-fill" style="width:' + pct + '%;"></span></span> <span class="mono" style="font-size:12px;color:var(--ink-faint);">' + share + '%</span></td>' +
-        '<td class="mono">$' + m.revenue.toFixed(2) + '</td>' +
-      '</tr>';
+      return '<div class="status-breakdown-row">' +
+        '<span class="status-breakdown-label" title="' + escapeHtml(m.domain) + '">' + escapeHtml(m.domain) + '</span>' +
+        '<span class="status-breakdown-bar-track"><span class="status-breakdown-bar-fill" style="width:' + pct + '%;"></span></span>' +
+        '<span class="status-breakdown-count mono">' + m.orderCount + '</span>' +
+      '</div>';
     }).join('');
   }
 
