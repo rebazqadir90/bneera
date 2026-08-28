@@ -7,6 +7,7 @@ import { createLeadsRoutes } from './routes/leads.routes.js';
 import { createOrdersRoutes } from './routes/orders.routes.js';
 import { createAdminRoutes } from './routes/admin.routes.js';
 import { createNotificationsRoutes } from './routes/notifications.routes.js';
+import { createAnalyticsRoutes } from './routes/analytics.routes.js';
 import { createUploadMiddleware } from './lib/upload.js';
 
 // Shared between local dev (server.js) and the Vercel serverless entry (api/index.js).
@@ -34,6 +35,7 @@ export function createApp({ connectionString, adminEmails = [], isProduction = f
   app.use('/api', createOrdersRoutes({ stmts, auth, upload }));
   app.use('/api', createAdminRoutes({ stmts, auth }));
   app.use('/api', createNotificationsRoutes({ stmts, auth }));
+  app.use('/api', createAnalyticsRoutes({ stmts, auth }));
 
   // Local dev only: server.js passes staticDir so express.static is mounted before the
   // catch-all 404 below (registration order matters — Vercel serves public/ natively

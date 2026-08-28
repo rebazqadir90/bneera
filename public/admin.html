@@ -130,7 +130,8 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
 @media (max-width:760px){ .stat-grid{grid-template-columns:repeat(2,1fr);} .stat-card:nth-child(5){grid-column:1 / -1;} }
 .status-breakdown{display:flex;flex-direction:column;gap:10px;}
 .status-breakdown-row{display:flex;align-items:center;gap:12px;}
-.status-breakdown-label{width:130px;flex:none;font-size:13.5px;color:var(--ink-soft);}
+.status-breakdown-label{width:130px;flex:none;font-size:13.5px;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.status-breakdown-label.wide{width:230px;}
 .status-breakdown-bar-track{flex:1;height:8px;border-radius:4px;background:var(--bg-alt);overflow:hidden;}
 .status-breakdown-bar-fill{display:block;height:100%;background:var(--accent);border-radius:4px;}
 .status-breakdown-count{width:36px;flex:none;text-align:right;font-family:var(--font-mono);font-size:13px;color:var(--ink-faint);}
@@ -203,6 +204,7 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
       <button type="button" class="admin-tab active" id="tab-btn-dashboard" data-tab="dashboard">Dashboard</button>
       <button type="button" class="admin-tab" id="tab-btn-accounts" data-tab="accounts">Accounts</button>
       <button type="button" class="admin-tab" id="tab-btn-orders" data-tab="orders">Orders</button>
+      <button type="button" class="admin-tab" id="tab-btn-analytics" data-tab="analytics">Analytics</button>
     </div>
 
     <div class="admin-tab-panel active" id="tab-panel-dashboard">
@@ -273,6 +275,24 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
         </table>
         </div>
         <p class="empty-state" id="orders-empty" hidden>No orders match.</p>
+      </div>
+    </div>
+
+    <div class="admin-tab-panel" id="tab-panel-analytics">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">Unique visitors</div><div class="stat-value mono" id="stat-visitors">0</div></div>
+        <div class="stat-card"><div class="stat-label">Total pageviews</div><div class="stat-value mono" id="stat-pageviews">0</div></div>
+        <div class="stat-card"><div class="stat-label">Total clicks</div><div class="stat-value mono" id="stat-clicks">0</div></div>
+        <div class="stat-card"><div class="stat-label">Pageviews (7d)</div><div class="stat-value mono" id="stat-pageviews-7">0</div></div>
+        <div class="stat-card"><div class="stat-label">Pageviews (30d)</div><div class="stat-value mono" id="stat-pageviews-30">0</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Top Pages</h2></div>
+        <div class="status-breakdown" id="top-pages-breakdown"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Top Clicked Elements</h2></div>
+        <div class="status-breakdown" id="top-clicks-breakdown"></div>
       </div>
     </div>
   </div>
@@ -562,6 +582,34 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
     }).join('');
   }
 
+  function renderBarList(containerId, items, getLabel, getCount){
+    var container = document.getElementById(containerId);
+    if(items.length === 0){
+      container.innerHTML = '<p class="empty-state">No data yet.</p>';
+      return;
+    }
+    var maxCount = Math.max.apply(null, items.map(getCount).concat([1]));
+    container.innerHTML = items.map(function(item){
+      var count = getCount(item);
+      var pct = Math.round((count / maxCount) * 100);
+      return '<div class="status-breakdown-row">' +
+        '<span class="status-breakdown-label wide" title="' + escapeHtml(getLabel(item)) + '">' + escapeHtml(getLabel(item)) + '</span>' +
+        '<span class="status-breakdown-bar-track"><span class="status-breakdown-bar-fill" style="width:' + pct + '%;"></span></span>' +
+        '<span class="status-breakdown-count mono">' + count + '</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  function renderAnalytics(summary){
+    document.getElementById('stat-visitors').textContent = summary.uniqueVisitors;
+    document.getElementById('stat-pageviews').textContent = summary.totalPageviews;
+    document.getElementById('stat-clicks').textContent = summary.totalClicks;
+    document.getElementById('stat-pageviews-7').textContent = summary.pageviewsLast7Days;
+    document.getElementById('stat-pageviews-30').textContent = summary.pageviewsLast30Days;
+    renderBarList('top-pages-breakdown', summary.topPages, function(p){ return p.path; }, function(p){ return p.count; });
+    renderBarList('top-clicks-breakdown', summary.topClicks, function(c){ return c.label; }, function(c){ return c.count; });
+  }
+
   var allUsers = [];
   var allOrders = [];
 
@@ -597,7 +645,8 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
       fetch('/api/admin/users', { credentials: 'same-origin' }).then(function(r){ return r.json(); }),
       fetch('/api/admin/orders', { credentials: 'same-origin' }).then(function(r){ return r.json(); }),
       fetch('/api/admin/stats', { credentials: 'same-origin' }).then(function(r){ return r.json(); }),
-      fetch('/api/admin/marketplaces', { credentials: 'same-origin' }).then(function(r){ return r.json(); })
+      fetch('/api/admin/marketplaces', { credentials: 'same-origin' }).then(function(r){ return r.json(); }),
+      fetch('/api/admin/analytics', { credentials: 'same-origin' }).then(function(r){ return r.json(); })
     ]).then(function(results){
       allUsers = results[0].users || [];
       allOrders = results[1].orders || [];
@@ -605,6 +654,7 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
       applyOrdersFilter();
       if(results[2].stats){ renderStats(results[2].stats); }
       renderMarketplaces(results[3].marketplaces || []);
+      if(results[4].summary){ renderAnalytics(results[4].summary); }
     });
   }
 

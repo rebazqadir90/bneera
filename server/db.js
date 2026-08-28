@@ -96,6 +96,18 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at BIGINT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+
+CREATE TABLE IF NOT EXISTS analytics_events (
+  id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  event_type TEXT NOT NULL CHECK (event_type IN ('pageview','click')),
+  path       TEXT NOT NULL,
+  label      TEXT NOT NULL DEFAULT '',
+  visitor_id TEXT NOT NULL,
+  created_at BIGINT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_type ON analytics_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_created_at ON analytics_events(created_at);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_path ON analytics_events(path);
 `;
 
 let schemaInitialized = false;
@@ -415,6 +427,42 @@ export function createStatements(pool) {
         }
       }
       return Object.values(byDomain).sort((a, b) => b.orderCount - a.orderCount);
+    },
+    async insertAnalyticsEvent({ eventType, path, label, visitorId }) {
+      await pool.query(
+        'INSERT INTO analytics_events (event_type, path, label, visitor_id, created_at) VALUES ($1, $2, $3, $4, $5)',
+        [eventType, path, label, visitorId, Date.now()]
+      );
+    },
+    async getAnalyticsSummary() {
+      const [pageviews, visitors, clicks, last7, last30, topPages, topClicks] = await Promise.all([
+        pool.query("SELECT COUNT(*)::int AS c FROM analytics_events WHERE event_type = 'pageview'"),
+        pool.query('SELECT COUNT(DISTINCT visitor_id)::int AS c FROM analytics_events'),
+        pool.query("SELECT COUNT(*)::int AS c FROM analytics_events WHERE event_type = 'click'"),
+        pool.query(
+          "SELECT COUNT(*)::int AS c FROM analytics_events WHERE event_type = 'pageview' AND created_at >= $1",
+          [Date.now() - 7 * 24 * 60 * 60 * 1000]
+        ),
+        pool.query(
+          "SELECT COUNT(*)::int AS c FROM analytics_events WHERE event_type = 'pageview' AND created_at >= $1",
+          [Date.now() - 30 * 24 * 60 * 60 * 1000]
+        ),
+        pool.query(
+          "SELECT path, COUNT(*)::int AS c FROM analytics_events WHERE event_type = 'pageview' GROUP BY path ORDER BY c DESC LIMIT 12"
+        ),
+        pool.query(
+          "SELECT label, COUNT(*)::int AS c FROM analytics_events WHERE event_type = 'click' AND label != '' GROUP BY label ORDER BY c DESC LIMIT 12"
+        )
+      ]);
+      return {
+        totalPageviews: pageviews.rows[0].c,
+        uniqueVisitors: visitors.rows[0].c,
+        totalClicks: clicks.rows[0].c,
+        pageviewsLast7Days: last7.rows[0].c,
+        pageviewsLast30Days: last30.rows[0].c,
+        topPages: topPages.rows.map((r) => ({ path: r.path, count: r.c })),
+        topClicks: topClicks.rows.map((r) => ({ label: r.label, count: r.c }))
+      };
     }
   };
 }
