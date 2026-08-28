@@ -27,5 +27,12 @@ export function createAdminRoutes({ stmts, auth }) {
     } catch (err) { next(err); }
   });
 
+  router.get('/admin/stats', requireAdmin, async (req, res, next) => {
+    try {
+      const stats = await stmts.getAdminStats();
+      res.status(200).json({ stats });
+    } catch (err) { next(err); }
+  });
+
   return router;
 }

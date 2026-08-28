@@ -377,6 +377,28 @@ export function createStatements(pool) {
         ORDER BY orders.created_at DESC
       `);
       return rows;
+    },
+    async getAdminStats() {
+      const [userCount, orderCount, statusCounts, revenue, last7, last30] = await Promise.all([
+        pool.query('SELECT COUNT(*)::int AS c FROM users'),
+        pool.query('SELECT COUNT(*)::int AS c FROM orders'),
+        pool.query('SELECT status, COUNT(*)::int AS c FROM orders GROUP BY status'),
+        // Canceled orders never completed, so they're excluded from revenue.
+        pool.query("SELECT COALESCE(SUM(price * quantity + tax + shipping), 0) AS total FROM orders WHERE status != 'Canceled'"),
+        pool.query('SELECT COUNT(*)::int AS c FROM orders WHERE created_at >= $1', [Date.now() - 7 * 24 * 60 * 60 * 1000]),
+        pool.query('SELECT COUNT(*)::int AS c FROM orders WHERE created_at >= $1', [Date.now() - 30 * 24 * 60 * 60 * 1000])
+      ]);
+      const ordersByStatus = {};
+      for (const status of STATUSES) ordersByStatus[status] = 0;
+      for (const row of statusCounts.rows) ordersByStatus[row.status] = row.c;
+      return {
+        totalAccounts: userCount.rows[0].c,
+        totalOrders: orderCount.rows[0].c,
+        ordersByStatus,
+        totalRevenue: Number(revenue.rows[0].total) || 0,
+        ordersLast7Days: last7.rows[0].c,
+        ordersLast30Days: last30.rows[0].c
+      };
     }
   };
 }

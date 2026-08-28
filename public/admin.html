@@ -123,6 +123,17 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
 .admin-tab-panel{display:none;}
 .admin-tab-panel.active{display:block;}
 
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:28px;}
+.stat-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;}
+.stat-card .stat-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;}
+.stat-card .stat-value{font-family:var(--font-display);font-size:32px;font-weight:800;line-height:1;}
+.status-breakdown{display:flex;flex-direction:column;gap:10px;}
+.status-breakdown-row{display:flex;align-items:center;gap:12px;}
+.status-breakdown-label{width:130px;flex:none;font-size:13.5px;color:var(--ink-soft);}
+.status-breakdown-bar-track{flex:1;height:8px;border-radius:4px;background:var(--bg-alt);overflow:hidden;}
+.status-breakdown-bar-fill{height:100%;background:var(--accent);border-radius:4px;}
+.status-breakdown-count{width:36px;flex:none;text-align:right;font-family:var(--font-mono);font-size:13px;color:var(--ink-faint);}
+
 /* order detail/edit modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(20,18,14,0.45);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:59;}
 .modal-overlay.open{opacity:1;pointer-events:auto;}
@@ -188,11 +199,26 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
 
   <div id="admin-content" style="display:none;">
     <div class="admin-tabs">
-      <button type="button" class="admin-tab active" id="tab-btn-accounts" data-tab="accounts">Accounts</button>
+      <button type="button" class="admin-tab active" id="tab-btn-dashboard" data-tab="dashboard">Dashboard</button>
+      <button type="button" class="admin-tab" id="tab-btn-accounts" data-tab="accounts">Accounts</button>
       <button type="button" class="admin-tab" id="tab-btn-orders" data-tab="orders">Orders</button>
     </div>
 
-    <div class="admin-tab-panel active" id="tab-panel-accounts">
+    <div class="admin-tab-panel active" id="tab-panel-dashboard">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">Total accounts</div><div class="stat-value" id="stat-accounts">0</div></div>
+        <div class="stat-card"><div class="stat-label">Total orders</div><div class="stat-value" id="stat-orders">0</div></div>
+        <div class="stat-card"><div class="stat-label">Total revenue</div><div class="stat-value" id="stat-revenue">$0</div></div>
+        <div class="stat-card"><div class="stat-label">Orders (7 days)</div><div class="stat-value" id="stat-last7">0</div></div>
+        <div class="stat-card"><div class="stat-label">Orders (30 days)</div><div class="stat-value" id="stat-last30">0</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Orders by Status</h2></div>
+        <div class="status-breakdown" id="status-breakdown"></div>
+      </div>
+    </div>
+
+    <div class="admin-tab-panel" id="tab-panel-accounts">
       <div class="panel">
         <div class="panel-head">
           <h2>Registered Accounts</h2>
@@ -491,6 +517,25 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
     });
   });
 
+  function renderStats(stats){
+    document.getElementById('stat-accounts').textContent = stats.totalAccounts;
+    document.getElementById('stat-orders').textContent = stats.totalOrders;
+    document.getElementById('stat-revenue').textContent = '$' + Number(stats.totalRevenue).toFixed(2);
+    document.getElementById('stat-last7').textContent = stats.ordersLast7Days;
+    document.getElementById('stat-last30').textContent = stats.ordersLast30Days;
+
+    var maxCount = Math.max.apply(null, STATUSES.map(function(s){ return stats.ordersByStatus[s] || 0; }).concat([1]));
+    document.getElementById('status-breakdown').innerHTML = STATUSES.map(function(s){
+      var count = stats.ordersByStatus[s] || 0;
+      var pct = Math.round((count / maxCount) * 100);
+      return '<div class="status-breakdown-row">' +
+        '<span class="status-breakdown-label">' + escapeHtml(s) + '</span>' +
+        '<span class="status-breakdown-bar-track"><span class="status-breakdown-bar-fill" style="width:' + pct + '%;"></span></span>' +
+        '<span class="status-breakdown-count mono">' + count + '</span>' +
+      '</div>';
+    }).join('');
+  }
+
   var allUsers = [];
   var allOrders = [];
 
@@ -524,12 +569,14 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
   function loadAll(){
     Promise.all([
       fetch('/api/admin/users', { credentials: 'same-origin' }).then(function(r){ return r.json(); }),
-      fetch('/api/admin/orders', { credentials: 'same-origin' }).then(function(r){ return r.json(); })
+      fetch('/api/admin/orders', { credentials: 'same-origin' }).then(function(r){ return r.json(); }),
+      fetch('/api/admin/stats', { credentials: 'same-origin' }).then(function(r){ return r.json(); })
     ]).then(function(results){
       allUsers = results[0].users || [];
       allOrders = results[1].orders || [];
       applyUsersFilter();
       applyOrdersFilter();
+      if(results[2].stats){ renderStats(results[2].stats); }
     });
   }
 
