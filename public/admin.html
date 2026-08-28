@@ -112,6 +112,17 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
 }
 .btn-view:hover{background:var(--accent-strong);}
 
+.admin-tabs{display:flex;gap:6px;margin-bottom:20px;border-bottom:1px solid var(--line);}
+.admin-tab{
+  font-family:var(--font-body);font-weight:600;font-size:14px;color:var(--ink-soft);
+  background:none;border:none;padding:10px 4px;margin-right:20px;cursor:pointer;
+  border-bottom:2px solid transparent;transition:color .15s ease,border-color .15s ease;
+}
+.admin-tab:hover{color:var(--ink);}
+.admin-tab.active{color:var(--ink);border-bottom-color:var(--accent);}
+.admin-tab-panel{display:none;}
+.admin-tab-panel.active{display:block;}
+
 /* order detail/edit modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(20,18,14,0.45);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:59;}
 .modal-overlay.open{opacity:1;pointer-events:auto;}
@@ -176,50 +187,59 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
   </div>
 
   <div id="admin-content" style="display:none;">
-    <div class="panel">
-      <div class="panel-head">
-        <h2>Registered Accounts</h2>
-        <span class="panel-count mono" id="users-count">0 accounts</span>
-      </div>
-      <div class="admin-toolbar">
-        <div class="search-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="users-search" placeholder="Search by name or email">
-        </div>
-        <select id="users-role-filter">
-          <option value="all">All roles</option>
-          <option value="user">User</option>
-          <option value="admin">Admin</option>
-        </select>
-      </div>
-      <table>
-        <thead><tr><th>Email</th><th>Full name</th><th>Role</th><th>Joined</th></tr></thead>
-        <tbody id="users-body"></tbody>
-      </table>
-      <p class="empty-state" id="users-empty" hidden>No accounts match.</p>
+    <div class="admin-tabs">
+      <button type="button" class="admin-tab active" id="tab-btn-accounts" data-tab="accounts">Accounts</button>
+      <button type="button" class="admin-tab" id="tab-btn-orders" data-tab="orders">Orders</button>
     </div>
 
-    <div class="panel">
-      <div class="panel-head">
-        <h2>All Orders</h2>
-        <span class="panel-count mono" id="orders-count">0 orders</span>
-      </div>
-      <div class="admin-toolbar">
-        <div class="search-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="orders-search" placeholder="Search order #, owner, or link">
+    <div class="admin-tab-panel active" id="tab-panel-accounts">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Registered Accounts</h2>
+          <span class="panel-count mono" id="users-count">0 accounts</span>
         </div>
-        <select id="orders-status-filter">
-          <option value="all">All statuses</option>
-        </select>
+        <div class="admin-toolbar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="users-search" placeholder="Search by name or email">
+          </div>
+          <select id="users-role-filter">
+            <option value="all">All roles</option>
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <table>
+          <thead><tr><th>Email</th><th>Full name</th><th>Role</th><th>Joined</th></tr></thead>
+          <tbody id="users-body"></tbody>
+        </table>
+        <p class="empty-state" id="users-empty" hidden>No accounts match.</p>
       </div>
-      <div class="table-scroll">
-      <table>
-        <thead><tr><th>Photo</th><th>Order</th><th>Owner</th><th>Qty</th><th>Status</th><th>Total</th><th></th></tr></thead>
-        <tbody id="orders-body"></tbody>
-      </table>
+    </div>
+
+    <div class="admin-tab-panel" id="tab-panel-orders">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>All Orders</h2>
+          <span class="panel-count mono" id="orders-count">0 orders</span>
+        </div>
+        <div class="admin-toolbar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="orders-search" placeholder="Search order #, owner, or link">
+          </div>
+          <select id="orders-status-filter">
+            <option value="all">All statuses</option>
+          </select>
+        </div>
+        <div class="table-scroll">
+        <table>
+          <thead><tr><th>Photo</th><th>Order</th><th>Owner</th><th>Qty</th><th>Status</th><th>Total</th><th></th></tr></thead>
+          <tbody id="orders-body"></tbody>
+        </table>
+        </div>
+        <p class="empty-state" id="orders-empty" hidden>No orders match.</p>
       </div>
-      <p class="empty-state" id="orders-empty" hidden>No orders match.</p>
     </div>
   </div>
 
@@ -512,6 +532,18 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
       applyOrdersFilter();
     });
   }
+
+  /* tabs */
+  var tabButtons = document.querySelectorAll('.admin-tab');
+  tabButtons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var target = btn.getAttribute('data-tab');
+      tabButtons.forEach(function(b){ b.classList.toggle('active', b === btn); });
+      document.querySelectorAll('.admin-tab-panel').forEach(function(panel){
+        panel.classList.toggle('active', panel.id === 'tab-panel-' + target);
+      });
+    });
+  });
 
   /* theme toggle */
   var themeBtn = document.getElementById('theme-toggle-btn');
