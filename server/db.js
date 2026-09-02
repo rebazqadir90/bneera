@@ -306,6 +306,17 @@ export function createStatements(pool) {
       const { rows } = await pool.query(`UPDATE users SET avatar = $1 WHERE id = $2 RETURNING *`, [avatarPath, userId]);
       return rows[0];
     },
+    async updateUserRole(userId, role) {
+      const { rows } = await pool.query(`UPDATE users SET role = $1 WHERE id = $2 RETURNING *`, [role, userId]);
+      return rows[0];
+    },
+    async updateUserProfile(userId, { fullName, email }) {
+      const { rows } = await pool.query(
+        `UPDATE users SET full_name = $1, email = $2 WHERE id = $3 RETURNING *`,
+        [fullName, email, userId]
+      );
+      return rows[0];
+    },
     async deleteSessionsByUser(userId) {
       await pool.query(`DELETE FROM sessions WHERE user_id = $1`, [userId]);
     },

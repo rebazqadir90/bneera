@@ -246,7 +246,7 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
           </select>
         </div>
         <table>
-          <thead><tr><th>Email</th><th>Full name</th><th>Role</th><th>Joined</th></tr></thead>
+          <thead><tr><th>Email</th><th>Full name</th><th>Role</th><th>Joined</th><th></th></tr></thead>
           <tbody id="users-body"></tbody>
         </table>
         <p class="empty-state" id="users-empty" hidden>No accounts match.</p>
@@ -347,6 +347,33 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
   <button type="button" class="modal-save-btn" id="m-save-btn">Save changes</button>
 </div>
 
+<!-- account edit modal -->
+<div class="modal-overlay" id="account-modal-overlay"></div>
+<div class="order-modal" id="account-modal" role="dialog" aria-modal="true" aria-hidden="true" style="width:420px;">
+  <div class="order-modal-head">
+    <h3>Edit Account</h3>
+    <button class="order-modal-close" id="account-modal-close-btn" type="button" aria-label="Close">&times;</button>
+  </div>
+  <div class="order-field">
+    <label for="am-fullname">Full name</label>
+    <input type="text" id="am-fullname" maxlength="200">
+  </div>
+  <div class="order-field">
+    <label for="am-email">Email</label>
+    <input type="email" id="am-email" maxlength="254">
+  </div>
+  <div class="order-field">
+    <label for="am-role">Role</label>
+    <select id="am-role">
+      <option value="user">User</option>
+      <option value="admin">Admin</option>
+    </select>
+    <p id="am-self-note" style="font-size:12.5px;color:var(--ink-faint);margin:0;" hidden>You can't change your own role.</p>
+  </div>
+  <p id="am-error" class="order-link-row" style="color:var(--danger);" hidden></p>
+  <button type="button" class="modal-save-btn" id="am-save-btn">Save changes</button>
+</div>
+
 <script>
 (function(){
   var STATUSES = ['Pending','Processed','Confirmed','Purchased','Received','Shipped To Iraq','Arrived','Delivered','Canceled'];
@@ -357,10 +384,92 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
     });
   }
 
+  var usersById = {};
+  var currentUser = null;
+
+  /* account edit modal */
+  var accountModalOverlay = document.getElementById('account-modal-overlay');
+  var accountModal = document.getElementById('account-modal');
+  var amFullName = document.getElementById('am-fullname');
+  var amEmail = document.getElementById('am-email');
+  var amRole = document.getElementById('am-role');
+  var amSelfNote = document.getElementById('am-self-note');
+  var amError = document.getElementById('am-error');
+  var amSaveBtn = document.getElementById('am-save-btn');
+  var currentEditUserId = null;
+
+  function openAccountModal(user){
+    currentEditUserId = user.id;
+    amFullName.value = user.fullName;
+    amEmail.value = user.email;
+    amRole.value = user.role;
+    var isSelf = currentUser && user.id === currentUser.id;
+    amRole.disabled = isSelf;
+    amSelfNote.hidden = !isSelf;
+    amError.hidden = true;
+    accountModalOverlay.classList.add('open');
+    accountModal.classList.add('open');
+    accountModal.setAttribute('aria-hidden', 'false');
+  }
+  function closeAccountModal(){
+    accountModalOverlay.classList.remove('open');
+    accountModal.classList.remove('open');
+    accountModal.setAttribute('aria-hidden', 'true');
+    currentEditUserId = null;
+  }
+  accountModalOverlay.addEventListener('click', closeAccountModal);
+  document.getElementById('account-modal-close-btn').addEventListener('click', closeAccountModal);
+
+  amSaveBtn.addEventListener('click', function(){
+    if(!currentEditUserId){ return; }
+    var id = currentEditUserId;
+    var user = usersById[id];
+    var isSelf = currentUser && id === currentUser.id;
+    amSaveBtn.disabled = true;
+    amSaveBtn.textContent = 'Saving...';
+    amError.hidden = true;
+
+    var requests = [
+      fetch('/api/admin/users/' + id, {
+        method: 'PATCH', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName: amFullName.value, email: amEmail.value })
+      }).then(function(res){ return res.json().then(function(data){ return { ok: res.ok, data: data }; }); })
+    ];
+    if(!isSelf && amRole.value !== user.role){
+      requests.push(
+        fetch('/api/admin/users/' + id + '/role', {
+          method: 'PATCH', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: amRole.value })
+        }).then(function(res){ return res.json().then(function(data){ return { ok: res.ok, data: data }; }); })
+      );
+    }
+
+    Promise.all(requests).then(function(results){
+      amSaveBtn.disabled = false;
+      amSaveBtn.textContent = 'Save changes';
+      var failed = results.find(function(r){ return !r.ok; });
+      if(failed){
+        amError.textContent = (failed.data.error && failed.data.error.message) || 'Failed to save.';
+        amError.hidden = false;
+        return;
+      }
+      closeAccountModal();
+      loadAll();
+    }).catch(function(){
+      amSaveBtn.disabled = false;
+      amSaveBtn.textContent = 'Save changes';
+      amError.textContent = 'Network error — try again.';
+      amError.hidden = false;
+    });
+  });
+
   function renderUsers(users){
     document.getElementById('users-count').textContent = users.length + (users.length === 1 ? ' account' : ' accounts');
     var body = document.getElementById('users-body');
     var empty = document.getElementById('users-empty');
+    usersById = {};
+    users.forEach(function(u){ usersById[u.id] = u; });
+
     if(users.length === 0){
       body.innerHTML = '';
       empty.hidden = false;
@@ -374,8 +483,15 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
         '<td>' + escapeHtml(u.fullName) + '</td>' +
         '<td class="' + (u.role === 'admin' ? 'role-admin' : '') + '">' + escapeHtml(u.role) + '</td>' +
         '<td class="mono">' + joined + '</td>' +
+        '<td><button type="button" class="btn-view" data-user-id="' + u.id + '">Edit</button></td>' +
       '</tr>';
     }).join('');
+
+    body.querySelectorAll('button[data-user-id]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        openAccountModal(usersById[Number(btn.getAttribute('data-user-id'))]);
+      });
+    });
   }
 
   function statusOptionsHtml(current){
@@ -699,6 +815,7 @@ img.thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:v
         document.getElementById('access-denied').style.display = 'block';
         return;
       }
+      currentUser = data.user;
       document.getElementById('admin-content').style.display = 'block';
       loadAll();
     });
